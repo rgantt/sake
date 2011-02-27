@@ -19,8 +19,6 @@ define( 'SAKE_PATH', join( '/', $parts ) );
  */
 function __autoload( $name )
 {
-	if( stristr( $name, '_controller' ) === false )
-		return activerecord_autoload( $name );
 	// are we looking at a namespace situation?
     if( preg_match( '|\\\|', $name ) )
         return;
