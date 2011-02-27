@@ -4,10 +4,15 @@ namespace biru_controller;
 class cgi
 {
     public $env_table;
+    static $cookie;
 
-    public function __construct()
+    public function __construct( &$request_hash = array() )
     {
-        $this->env_table = $_SERVER;
+    	// can't assign-by-reference in a ternary
+    	if( empty( $request_hash ) && isset( $_SESSION ) )
+    		$this->env_table = &$_SESSION;
+    	else
+    		$this->env_table = &$request_hash;
     }
 
     public function header( $headers )

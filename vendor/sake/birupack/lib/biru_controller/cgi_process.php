@@ -1,6 +1,8 @@
 <?php
 namespace biru_controller;
 
+require_once dirname(__FILE__).'/session.php';
+
 class cgi_request extends abstract_request
 {
     public $cgi;
@@ -17,14 +19,13 @@ class cgi_request extends abstract_request
       'cookie_only'      => true
     );
 
-    public function __construct( $cgi, $session_options = array() )
+    public function __construct( &$cgi, $session_options = array() )
     {
         //parent::__construct();
-        $this->cgi = $cgi;
+        $this->cgi = &$cgi;
         $this->session_options = $session_options;
         $this->session = new lazy_session_reader();
-        $s = 'env_table';
-        $this->env = $this->cgi->$s;
+        $this->env = &$this->cgi->env_table;
     }
 
     public function query_string()
@@ -32,7 +33,7 @@ class cgi_request extends abstract_request
         $qs = '';
         if( method_exists( $this->cgi, 'query_string' ) )
             $qs = $this->cgi->query_string();
-        return ( $qa != '' ? $qs : parent::query_string() );
+        return ( $qs != '' ? $qs : parent::query_string() );
     }
 
     public function body()
@@ -61,7 +62,18 @@ class cgi_request extends abstract_request
 
     public function host_with_port_without_standard_port_handling()
     {
-        return "{$this->env['HTTP_HOST']}:{$this->env['SERVER_PORT']}";
+		if( isset( $this->env['HTTP_X_FORWARDED_HOST'] ) && ( $forwarded = $this->env['HTTP_X_FORWARDED_HOST'] ) )
+		{
+			$parts = preg_split( '/,\s?/', $forwarded );
+			return $parts[ count( $parts ) - 1 ];
+		}
+		else if( isset( $this->env['HTTP_HOST'] ) && ( $http_host = $this->env['HTTP_HOST'] ) )
+			return $http_host;
+		else if( isset( $this->env['SERVER_NAME'] ) && ( $server_name = $this->env['SERVER_NAME'] ) )
+			return $server_name;
+		else
+			return "{$this->env['SERVER_ADDR']}:{$this->env['SERVER_PORT']}";
+        //return "{$this->env['HTTP_HOST']}:{$this->env['SERVER_PORT']}";
     }
 
     public function host()
@@ -72,8 +84,8 @@ class cgi_request extends abstract_request
     public function port()
     {
         $matches = array();
-        if( preg_match( '/:(\d+)$/', $this->host_with_port_without_standard_port_handling() ) )
-            return $matches[0];
+        if( preg_match( '/:(\d+)$/', $this->host_with_port_without_standard_port_handling(), $matches ) )
+            return $matches[1];
         return $this->standard_port();
     }
 

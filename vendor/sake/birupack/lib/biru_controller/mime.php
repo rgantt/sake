@@ -1,10 +1,6 @@
 <?php
 namespace mime;
 
-$SET = array();
-$EXTENSION_LOOKUP = array(); //Hash.new { |h, k| h[k] = Type.new(k) unless k.blank? }
-$LOOKUP = array(); //Hash.new { |h, k| h[k] = Type.new(k) unless k.blank? }
-
 class accept_item
 {
     public $order;
@@ -34,18 +30,24 @@ class accept_item
     }
 }
 
+class mime_type_not_found extends \biru_controller\sake_exception {}
+
 class type
 {
-    static function lookup( $string )
+	static $SET = array();
+	static $EXTENSION_LOOKUP = array();
+	static $LOOKUP = array();
+    
+	static function lookup( $string )
     {
-        global $LOOKUP;
-        return isset( $LOOKUP[ $string ] ) ? $LOOKUP[ $string ] : $string;
+        if( isset( self::$LOOKUP[ $string ] ) )
+        	return self::$LOOKUP[ $string ];
+        throw new mime_type_not_found("Could not find a MIME handler for {$string}");
     }
 
     static function lookup_by_extension( $extension )
     {
-        global $EXTENSION_LOOKUP;
-        return $EXTENSION_LOOKUP[ $extension ];
+        return self::$EXTENSION_LOOKUP[ $extension ];
     }
 
     static function register_alias( $string, $symbol, $extension_synonyms = array() )
@@ -55,16 +57,16 @@ class type
 
     static function register( $string, $symbol, $mime_type_synonyms = array(), $extension_synonyms = array(), $skip_lookup = false )
     {
-        global $SET, $LOOKUP, $EXTENSION_LOOKUP;
-        define( strtoupper( $symbol ), new Type( $string, $symbol, $mime_type_synonyms ) );
-        $SET[] = constant( strtoupper( $symbol ) );
+        //define( strtoupper( $symbol ), new Type( $string, $symbol, $mime_type_synonyms ) );
+        //$SET[] = constant( strtoupper( $symbol ) );
+        self::$SET[] = new Type( $string, $symbol, $mime_type_synonyms );
 
         $a1 = array_merge( array( $string ), $mime_type_synonyms );
         $a2 = array_merge( array( $symbol ), $extension_synonyms );
         foreach( $a1 as $string )
-            $LOOKUP[ $string ] = $SET[ count( $SET ) - 1 ];
+            self::$LOOKUP[ $string ] = self::$SET[ count( self::$SET ) - 1 ];
         foreach( $a2 as $ext )
-            $EXTENSION_LOOKUP[ $ext ] = $SET[ count( $SET ) - 1 ];
+            self::$EXTENSION_LOOKUP[ $ext ] = self::$SET[ count( self::$SET ) - 1 ];
     }
 
     static function parse( $accept_header )

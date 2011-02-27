@@ -72,6 +72,13 @@ abstract class base implements controller
     public static $protected_instance_variables = array();
     public static $view_controller_internals = false;
 
+    public static $param_parsers = array(
+    	'MULTIPART_FORM' 	=> 'multipart_form',
+    	'URL_ENCODED_FORM' 	=> 'url_encoded_form',
+    	'XML' 				=> 'xml_simple',
+    	'JSON' 				=> 'json'
+	);
+    
     abstract public function initialize();
 
     final public function __construct()
