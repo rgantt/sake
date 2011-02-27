@@ -1,0 +1,3 @@
+<?
+class template_error{}
+?>
