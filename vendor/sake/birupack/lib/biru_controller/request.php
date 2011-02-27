@@ -24,6 +24,7 @@ abstract class abstract_request
     public $protocol;
     public $host_with_port;
     public $port;
+    public $content_length;
 
     private $parameters;
     private $path_parameters;
@@ -162,13 +163,13 @@ abstract class abstract_request
 
     public function ssl()
     {
-        return ( ( isset( $this->env['HTTPS'] ) && $this->env['HTTPS'] == 'on' ) || ( isset( $this->env['HTTPS'] ) && $this->env['HTTP_X_FORWARDED_PROTO'] == 'https' ) );
+        return ( 
+        	( isset( $this->env['HTTPS'] ) && $this->env['HTTPS'] == 'on' ) || 
+        	( isset( $this->env['HTTP_X_FORWARDED_PROTO'] ) && $this->env['HTTP_X_FORWARDED_PROTO'] == 'https' ) 
+        );
     }
 
-    public function host()
-    {
-    	return $this->host;
-    }
+    public function host(){}
 
     public function host_with_port()
     {
@@ -216,7 +217,7 @@ abstract class abstract_request
         if( $uri )
         {
             $parts = explode( '?', $uri );
-            return $parts[1];
+            return ( isset( $parts[1] ) ? $parts[1] : '' );
         }
         else
             return $this->env['QUERY_STRING'];
@@ -284,7 +285,7 @@ abstract class abstract_request
             if( $body->responds_to('rewind') )
                 $body->rewind();
         }
-        return $tihs->env['RAW_POST_DATA'];
+        return $this->env['RAW_POST_DATA'];
     }
 
     public function parameters()
@@ -331,10 +332,47 @@ abstract class abstract_request
 
     protected function parse_formatted_request_parameters()
     {
-        $pairs = array();
-        foreach( $_POST as $key => $value )
-            $pairs[ $key ] = $value;
-        return $pairs;
+    	if( $this->content_length() == 0 )
+    		return array();
+    		
+    	$mpb = self::extract_multipart_boundary( $this->content_type_with_parameters() );
+    	if( count( $mpb ) > 1 )
+    		list( $content_type, $boundary ) = $mpb;
+    	else
+    		$content_type = $mpb;
+    	
+    	# Don't parse params for unknown requests
+    	if( empty( $content_type ) )
+    		return array();
+    		
+    	$mime_type = \mime\type::lookup( $content_type );
+    	$strategy = base::$param_parsers[ strtoupper( $mime_type->symbol ) ];
+    	
+    	$body = ( ( $strategy && ( $strategy != 'multipart_form' ) ) ? $this->raw_post() : $this->body() );
+
+    	try
+    	{
+    		switch( $strategy )
+    		{
+	    		case 'url_encoded_form':
+    				self::clean_up_ajax_request_body( $body );
+    				return self::parse_query_parameters( $body );
+    			case 'multipart_form':
+	    			return self::parse_multipart_form_parameters( $body, $boundary, $content_length, $env );
+    			case 'xml_simple':
+    			case 'xml_node':
+	    			break;
+    			case 'yaml':
+	    			return yaml::load( $body );
+    				break;
+    			default:
+	    			return array();
+    		}
+    	}
+    	catch( sake_exception $e )
+    	{
+    		throw $e;
+    	}
     }
     
     private function named_host( $host )
@@ -362,6 +400,13 @@ abstract class abstract_request
     	$results = array();
     	parse_str( $query_string, $results );
     	return $results;
+    }
+    
+    static function clean_up_ajax_request_body( &$body )
+    {
+    	if( substr( $body, -1 ) == '0' )
+    		$body = substr( $body, 0, strlen( $body ) - 1 );
+    	preg_replace( '/&_=$/', '', $body );
     }
 }
 ?>
