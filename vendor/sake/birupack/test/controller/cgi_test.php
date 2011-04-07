@@ -38,13 +38,13 @@ abstract class base_cgi_test extends SAKE_test_case
 	    	'SCRIPT_FILENAME' => '/home/bsdlite/sites/sake/index.php', 
 	    	'REDIRECT_STATUS' => '200', 
 	    	'REQUEST_METHOD' => 'GET'
-	    	);
-	    	# cookie as returned by some Nokia phone browsers (no space after semicolon separator)
-	    	$this->alt_cookie_fmt_request_hash = array(
+	    );
+	    # cookie as returned by some Nokia phone browsers (no space after semicolon separator)
+	    $this->alt_cookie_fmt_request_hash = array(
 	    	"HTTP_COOKIE"=>"_session_id=c84ace84796670c052c6ceb2451fb0f2;is_admin=yes"
-	    	);
-	    	$this->fake_cgi = new cgi( $this->request_hash );
-	    	$this->request = new cgi_request( $this->fake_cgi );
+	    );
+	    $this->fake_cgi = new cgi( $this->request_hash );
+	    $this->request = new cgi_request( $this->fake_cgi );
 	}
 }
 
@@ -58,8 +58,8 @@ class cgi_test extends base_cgi_test // CgiRequestTest
 	public function test_http_host()
 	{
 		unset( $this->request_hash['HTTP_X_FORWARDED_HOST'] );
-		$this->request_hash['HTTP_HOST'] = "rubyonrails.org:8080";
-		$this->assertEquals( "rubyonrails.org:8080", $this->request->host_with_port() );
+		$this->request_hash['HTTP_HOST'] = "google.com:8080";
+		$this->assertEquals( "google.com:8080", $this->request->host_with_port() );
 
 		$this->request_hash['HTTP_X_FORWARDED_HOST'] = "www.firsthost.org, www.secondhost.org";
 		$this->assertEquals( "www.secondhost.org", $this->request->host() );
@@ -68,8 +68,8 @@ class cgi_test extends base_cgi_test // CgiRequestTest
 	public function test_http_host_with_default_port_overrides_server_port()
 	{
 		unset( $this->request_hash['HTTP_X_FORWARDED_HOST'] );
-		$this->request_hash['HTTP_HOST'] = "rubyonrails.org";
-		$this->assertEquals( "rubyonrails.org", $this->request->host_with_port() );
+		$this->request_hash['HTTP_HOST'] = "google.com";
+		$this->assertEquals( "google.com", $this->request->host_with_port() );
 	}
 
 	public function test_host_with_port_defaults_to_server_name_if_no_host_headers()
@@ -114,9 +114,10 @@ class cgi_test extends base_cgi_test // CgiRequestTest
 		$this->assertEquals( "[2001:1234:5678:9abc:def0::dead:beef]", $this->request->host() );
 	}
 
-	/** NOT YET IMPLEMENTED!
-	 public function test_cookie_syntax_resilience()
-	 {
+	/** NOT YET IMPLEMENTED! */
+	/*
+	public function test_cookie_syntax_resilience()
+	{
 		$c = cgi::$cookie;
 		$cookie = $c::parse( $this->request_hash['HTTP_COOKIE'] );
 		$this->assertEquals( array("c84ace84796670c052c6ceb2451fb0f2"), $cookies['_session_id'] );
@@ -125,8 +126,8 @@ class cgi_test extends base_cgi_test // CgiRequestTest
 		$alt_cookies = $ac::parse( $this->alt_cookie_fmt_request_hash['HTTP_COOKIE'] );
 		$this->assertEquals( array( "c84ace84796670c052c6ceb2451fb0f2" ), $alt_cookies['_session_id'] );
 		$this->assertEquals( array( "yes" ), $alt_cookies['is_admin'] );
-		}
-		*/
+	}
+	*/
 
 	public function test_doesnt_break_when_content_type_has_charset()
 	{

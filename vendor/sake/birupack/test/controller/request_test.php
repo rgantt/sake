@@ -49,11 +49,11 @@ class request_test extends SAKE_test_case
 
 	public function test_domains()
 	{
-		$this->request->host = "www.rubyonrails.org";
-		$this->assertEquals( "rubyonrails.org", $this->request->domain() );
+		$this->request->host = "www.google.com";
+		$this->assertEquals( "google.com", $this->request->domain() );
 
-		$this->request->host = "www.rubyonrails.co.uk";
-		$this->assertEquals( "rubyonrails.co.uk", $this->request->domain(2) );
+		$this->request->host = "www.google.co.jp";
+		$this->assertEquals( "google.co.jp", $this->request->domain(2) );
 
 		$this->request->host = "192.168.1.200";
 		$this->assertNull( $this->request->domain() );
@@ -70,14 +70,14 @@ class request_test extends SAKE_test_case
 
 	public function test_subdomains()
 	{
-		$this->request->host = "www.rubyonrails.org";
+		$this->request->host = "www.google.com";
 		$this->assertEquals( array( "www" ), $this->request->subdomains() );
 
-		$this->request->host = "www.rubyonrails.co.uk";
+		$this->request->host = "www.google.co.jp";
 		$this->assertEquals( array( "www"), $this->request->subdomains(2) );
 
-		$this->request->host = "dev.www.rubyonrails.co.uk";
-		$this->assertEquals( array( "dev", "www" ), $this->request->subdomains(2) );
+		$this->request->host = "mail.www.google.com";
+		$this->assertEquals( array( "mail", "www" ), $this->request->subdomains(2) );
 
 		$this->request->host = "foobar.foobar.com";
 		$this->assertEquals( array( "foobar" ), $this->request->subdomains() );
@@ -118,21 +118,21 @@ class request_test extends SAKE_test_case
 		$this->assertEquals( "", $this->request->relative_url_root() );
 
 		$this->request->relative_url_root = null;
-		$this->request->env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi";
-		$this->assertEquals( "/hieraki", $this->request->relative_url_root() );
+		$this->request->env['SCRIPT_NAME'] = "/sake/dispatch.cgi";
+		$this->assertEquals( "/sake", $this->request->relative_url_root() );
 
 		$this->request->relative_url_root = null;
-		$this->request->env['SCRIPT_NAME'] = "/collaboration/hieraki/dispatch.cgi";
-		$this->assertEquals( "/collaboration/hieraki", $this->request->relative_url_root() );
+		$this->request->env['SCRIPT_NAME'] = "/collaboration/sake/dispatch.cgi";
+		$this->assertEquals( "/collaboration/sake", $this->request->relative_url_root() );
 
 		# apache/scgi case
 		$this->request->relative_url_root = null;
-		$this->request->env['SCRIPT_NAME'] = "/collaboration/hieraki";
-		$this->assertEquals( "/collaboration/hieraki", $this->request->relative_url_root() );
+		$this->request->env['SCRIPT_NAME'] = "/collaboration/sake";
+		$this->assertEquals( "/collaboration/sake", $this->request->relative_url_root() );
 
 		# @env overrides path guess
 		$this->request->relative_url_root = null;
-		$this->request->env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi";
+		$this->request->env['SCRIPT_NAME'] = "/sake/dispatch.cgi";
 		$this->request->env['RAILS_RELATIVE_URL_ROOT'] = "/real_url";
 		$this->assertEquals( "/real_url", $this->request->relative_url_root() );
 	}
@@ -142,12 +142,12 @@ class request_test extends SAKE_test_case
 		$this->request->env['SERVER_SOFTWARE'] = 'Apache 42.342.3432';
 
 		$this->request->relative_url_root = null;
-		$this->request->set_REQUEST_URI("http://www.rubyonrails.org/path/of/some/uri?mapped=1");
+		$this->request->set_REQUEST_URI("http://www.google.com/path/of/some/uri?mapped=1");
 		$this->assertEquals( "/path/of/some/uri?mapped=1", $this->request->request_uri() );
 		$this->assertEquals( "/path/of/some/uri", $this->request->path() );
 
 		$this->request->relative_url_root = null;
-		$this->request->set_REQUEST_URI("http://www.rubyonrails.org/path/of/some/uri");
+		$this->request->set_REQUEST_URI("http://www.google.com/path/of/some/uri");
 		$this->assertEquals( "/path/of/some/uri", $this->request->request_uri() );
 		$this->assertEquals( "/path/of/some/uri", $this->request->path() );
 
@@ -174,14 +174,14 @@ class request_test extends SAKE_test_case
 
 		$this->request->relative_url_root = null;
 		$this->request->set_REQUEST_URI("/hieraki/");
-		$this->request->env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi";
-		$this->assertEquals( "/hieraki/", $this->request->request_uri() );
+		$this->request->env['SCRIPT_NAME'] = "/sake/dispatch.cgi";
+		$this->assertEquals( "/sake/", $this->request->request_uri() );
 		$this->assertEquals( "/", $this->request->path() );
 
 		$this->request->relative_url_root = null;
-		$this->request->set_REQUEST_URI("/collaboration/hieraki/books/edit/2");
-		$this->request->env['SCRIPT_NAME'] = "/collaboration/hieraki/dispatch.cgi";
-		$this->assertEquals( "/collaboration/hieraki/books/edit/2", $this->request->request_uri() );
+		$this->request->set_REQUEST_URI("/collaboration/sake/books/edit/2");
+		$this->request->env['SCRIPT_NAME'] = "/collaboration/sake/dispatch.cgi";
+		$this->assertEquals( "/collaboration/sake/books/edit/2", $this->request->request_uri() );
 		$this->assertEquals( "/books/edit/2", $this->request->path() );
 
 		# The following tests are for when REQUEST_URI is not supplied (as in IIS)
@@ -227,19 +227,19 @@ class request_test extends SAKE_test_case
 
 		$this->request->set_REQUEST_URI( null );
 		$this->request->relative_url_root = null;
-		$this->request->env['PATH_INFO'] = "/hieraki/";
-		$this->request->env['SCRIPT_NAME'] = "/hieraki/dispatch.cgi";
-		$this->assertEquals( "/hieraki/", $this->request->request_uri() );
+		$this->request->env['PATH_INFO'] = "/sake/";
+		$this->request->env['SCRIPT_NAME'] = "/sake/dispatch.cgi";
+		$this->assertEquals( "/sake/", $this->request->request_uri() );
 		$this->assertEquals( "/", $this->request->path() );
 
-		$this->request->set_REQUEST_URI( '/hieraki/dispatch.cgi' );
-		$this->request->relative_url_root = '/hieraki';
+		$this->request->set_REQUEST_URI( '/sake/dispatch.cgi' );
+		$this->request->relative_url_root = '/sake';
 		$this->assertEquals( "/dispatch.cgi", $this->request->path() );
 		$this->request->relative_url_root = null;
 
-		$this->request->set_REQUEST_URI( '/hieraki/dispatch.cgi' );
+		$this->request->set_REQUEST_URI( '/sake/dispatch.cgi' );
 		$this->request->relative_url_root = '/foo';
-		$this->assertEquals( "/hieraki/dispatch.cgi", $this->request->path() );
+		$this->assertEquals( "/sake/dispatch.cgi", $this->request->path() );
 		$this->request->relative_url_root = null;
 
 		# This test ensures that Rails uses REQUEST_URI over PATH_INFO
@@ -253,16 +253,16 @@ class request_test extends SAKE_test_case
 
 	public function test_host_with_default_port()
 	{
-		$this->request->host = "rubyonrails.org";
+		$this->request->host = "google.com";
 		$this->request->port("80");
-		$this->assertEquals( "rubyonrails.org", $this->request->host_with_port() );
+		$this->assertEquals( "google.com", $this->request->host_with_port() );
 	}
 
 	public function test_host_with_non_default_port()
 	{
-		$this->request->host = "rubyonrails.org";
+		$this->request->host = "google.com";
 		$this->request->port("81");
-		$this->assertEquals( "rubyonrails.org:81", $this->request->host_with_port() );
+		$this->assertEquals( "google.com:81", $this->request->host_with_port() );
 	}
 
 	public function test_server_software()
@@ -298,7 +298,7 @@ class request_test extends SAKE_test_case
 
 	public function test_request_methods()
 	{
-		$m = array( 'get', 'head', 'post', 'put', 'delete' );
+		$m = array( 'get', 'head', 'post', 'put', 'delete', 'options' );
 		foreach( $m as $method )
 		{
 			$this->set_request_method_to( $method );
@@ -330,16 +330,6 @@ class request_test extends SAKE_test_case
 	{
 		$this->assertNotNull( $this->request->user_agent );
 	}
-	/**
-	 def test_parameters
-	 @request.instance_eval { @request_parameters = { "foo" => 1 } }
-	 @request.instance_eval { @query_parameters = { "bar" => 2 } }
-
-	 assert_equal({"foo" => 1, "bar" => 2}, @request.parameters)
-	 assert_equal({"foo" => 1}, @request.request_parameters)
-	 assert_equal({"bar" => 2}, @request.query_parameters)
-	 end
-	 */
 
 	protected function set_request_method_to( $method )
 	{
