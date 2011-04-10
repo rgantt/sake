@@ -1,13 +1,37 @@
 <?php
 namespace biru_controller;
 
-class flash
+class flash implements \ArrayAccess
 {
-	public $warning;
-	public $error;
-	public $notice;
+	private $flash;
+	private $should_expire = true;
 	
-	private $should_expire;
+	public function __construct( $flash = array() )
+	{
+		$this->flash = (array) $flash;
+	}
+	
+	public function offsetExists( $offset )
+	{
+		return isset( $this->flash[ $offset ] );
+	}
+	
+	public function offsetGet( $offset )
+	{
+		return $this->offsetExists( $offset ) ? $this->flash[ $offset ] : null;
+	}
+	
+	public function offsetSet( $offset, $value )
+	{
+		if( is_null( $offset ) )
+			throw new \sake_exception("Flash offset requires named key");
+		$this->flash[ $offset ] = $value;
+	}
+	
+	public function offsetUnset( $offset )
+	{
+		unset( $this->flash[ $offset ] );
+	}
 	
 	public function set_to_expire( $bool )
 	{
@@ -18,13 +42,4 @@ class flash
 	{
 		return $this->should_expire;
 	}
-	
-	public $names = array( 'warning', 'error', 'notice' );
 }
-
-class flash_reader extends reader
-{
-	public function __get( $name ){}
-	public function __set( $name, $value ){}
-}
-?>
