@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_view\template_handlers;
 
 abstract class compilable_template_handler extends \biru_view\template_handler

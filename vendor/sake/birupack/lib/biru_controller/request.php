@@ -26,8 +26,8 @@ abstract class abstract_request
     public $port;
     public $content_length;
 
-    private $parameters;
-    private $path_parameters;
+    protected $parameters;
+    protected $path_parameters;
     
     abstract public function body();
     abstract public function query_parameters();
@@ -243,7 +243,7 @@ abstract class abstract_request
         	//script_filename = @env['SCRIPT_NAME'].to_s.match(%r{[^/]+$})
         	$uri = $this->env['PATH_INFO'];
     	   	if( !is_null( $script_filename ) )
-       			$uri = preg_replace( '/{$script_filename}\//', '', $uri );
+       			$uri = preg_replace( "/{$script_filename}\//", "", $uri );
         	if( isset( $this->env['QUERY_STRING'] ) && !is_null( $this->env['QUERY_STRING'] ) && !empty( $this->env['QUERY_STRING'] ) )
         		$uri .= "?{$this->env['QUERY_STRING']}";
     	}
@@ -291,7 +291,13 @@ abstract class abstract_request
     public function parameters()
     {
         if( !$this->parameters )
-            $this->parameters = array_merge( $this->request_parameters(), $this->query_parameters(), $this->path_parameters() );
+        {
+            $this->parameters = array_merge( 
+            	is_array( $this->request_parameters() ) ? $this->request_parameters() : array(), 
+            	is_array( $this->query_parameters() ) ? $this->query_parameters() : array(), 
+            	$this->path_parameters()
+            );
+        }
         return $this->parameters;
     }
 

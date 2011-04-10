@@ -117,7 +117,7 @@ abstract class base implements controller
         $this->initialize();
 
         //$this->log_processing();
-        $this->flash = $this->session->__flash ? unserialize( $this->session->__flash ) : null;
+        $this->flash = (object)($this->session->__flash ? unserialize( $this->session->__flash ) : null);
         $this->extract_globals( array_merge( $this->properties(), array( 'controller' => $this ) ) );
         $this->$method( $arguments );
 
@@ -145,7 +145,7 @@ abstract class base implements controller
 
     public function __call( $name, $arguments )
     {
-        throw new \sake_exception("call to undefined method {$name}");
+        throw new \biru_controller\sake_exception("call to undefined method {$name}");
     }
 
     public function url_for( $options = array() )
@@ -190,7 +190,7 @@ abstract class base implements controller
         if( $defaults )
             return array_merge( $defaults, $options );
         else
-            return $options;
+            return (array)$options;
     }
 
     public function initialize_current_url()
@@ -533,9 +533,10 @@ abstract class base implements controller
             return $this->render_for_text( $options['text'], $options['status'] );
         else
         {
+        	$options['locals'] = ( isset( $options['locals'] ) ? $options['locals'] : array() );
+        	$options['type'] = ( isset( $options['type'] ) ? $options['type'] : null );
             if( isset( $options['file'] ) )
             {
-                $locals = ( isset( $options['locals'] ) ? $options['locals'] : array() );
                 return $this->render_for_file( $options['file'], $options['status'], $options['use_full_path'], $options['locals'] );
             }
             else if( isset( $options['template'] ) )
@@ -543,8 +544,8 @@ abstract class base implements controller
             else if( isset( $options['inline'] ) )
             {
                 $this->add_variables_to_assigns();
-                $tmpl = new biru_view\template( $this->template, $options['inline'], false, $options['locals'], true, $options['type'] );
-                return $this->render_for_text( $this->template->renderetemplate( $tmpl ), $options['status'] );
+                $tmpl = new \biru_view\template( $this->template, $options['inline'], false, $options['locals'], true, $options['type'] );
+                return $this->render_for_text( $this->template->render_template( $tmpl ), $options['status'] );
             }
             else if( isset( $options['action'] ) )
             {
@@ -637,6 +638,13 @@ abstract class base implements controller
         $this->forget_variables_added_to_assigns();
         $this->reset_variables_added_to_assigns();
         return $m;
+    }
+    
+    public function reset_session()
+    {
+    	$this->request->reset_session();
+        $this->session = &$this->request->session;
+        $this->response->session = $this->session;
     }
 
     protected function render_with_a_layout( $options = null, $extra_options = array(), $block )
@@ -874,7 +882,7 @@ abstract class base implements controller
     {
         $this->request = &$request;
         $this->params = (object) $this->request->parameters();
-        $this->cookies = &$this->request->cookies();
+        $this->cookies = $this->request->cookies(); // was &, threw notice
 
         $this->response = &$response;
         $this->response->session = &$this->request->session;
@@ -886,9 +894,10 @@ abstract class base implements controller
         $this->headers = &$this->response->headers;
     }
 
+    // this isn't doing its job right now!
     private function assign_names()
     {
-        $this->action_name = ( $this->params->action ? $this->params->action : 'index' );
+        $this->action_name = ( !empty( $this->params->action ) ? $this->params->action : 'index' );
     }
 
     private function forget_variables_added_to_assigns()

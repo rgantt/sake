@@ -1,9 +1,9 @@
-<?
+<?php
 namespace biru_view\template_handlers;
 
 class phtml extends \biru_view\template_handlers\compilable_template_handler // implements \BiruView\TemplateHandlers\compilable
 {
-    public function compile( $template )
+    public function compile( &$template )
     {
         $n = new phtml( $template, null, $this->view->phtml_trim_mode );
         return $n->src;

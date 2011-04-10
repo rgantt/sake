@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_view;
 
 class template_handler

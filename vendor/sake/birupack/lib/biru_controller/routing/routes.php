@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_controller\routing;
 
 class routes
@@ -12,6 +12,12 @@ class routes
             $page = $default['page'];
         $class = ucfirst( strtolower( $page ) ).'_controller';
         return new $class(); 
+    }
+    
+    static function extra_keys( $hash, $recall = array() )
+    {
+    	//(hash || {}).keys.map { |k| k.to_sym } - (recall || {}).keys - significant_keys
+    	return array();
     }
 }
 ?>

@@ -4,10 +4,22 @@ namespace biru_controller;
 require_once dirname(__FILE__).'/base.php';
 require_once dirname(__FILE__).'/request.php';
 require_once dirname(__FILE__).'/response.php';
+require_once dirname(__FILE__).'/routing/routes.php';
+require_once dirname(__FILE__).'/url_rewriter.php';
+require_once dirname(__FILE__).'/../biru_view/base.php';
+require_once dirname(__FILE__).'/../biru_view/template_finder.php';
+require_once dirname(__FILE__).'/../biru_view/template_handler.php';
+require_once dirname(__FILE__).'/../biru_view/template.php';
+require_once dirname(__FILE__).'/../biru_view/template_handlers/compilable.php';
+require_once dirname(__FILE__).'/../biru_view/template_handlers/phtml.php';
 
 class concrete_base extends base
 {
-	public function initialize(){}
+	public function initialize()
+	{
+		$this->set_default_layout("blank");
+	}
+	
     # Process a test request called with a +TestRequest+ object.
     static function process_test( $request )
     {
@@ -32,18 +44,18 @@ class concrete_base extends base
 		return call_user_func_array( array( $this, 'process' ), func_get_args() );
 	}
 	
-    public function process( $request, $response )
+    /*public function process( &$request, &$response, $method=null, $arguments=null )
     {
     	return $this->test( $request, $response );
-    }
+    }*/
 }
 
 class test_request extends abstract_request
 {
 	public $cookies;
 	public $session_options;
-	public $query_parameters;
-	public $request_parameters;
+	public $query_parameters = array();
+	public $request_parameters = array();
 	public $path;
 	public $session;
 	public $env;
@@ -138,7 +150,7 @@ class test_request extends abstract_request
 	
 	public function assign_parameters( $controller_path, $action, $parameters )
 	{
-		$parameters = array_merge( $parameters, array( 'page' => $controller_path, 'action' => $action ) );
+		$parameters = array_merge( ( is_array( $parameters ) ? $parameters : array() ), array( 'page' => $controller_path, 'action' => $action ) );
 		$extra_keys = \biru_controller\routing\routes::extra_keys( $parameters );
 		$non_path_parameters = $this->get() ? $this->query_parameters() : $this->request_parameters();
 		foreach( $parameters as $key => $value )
@@ -147,18 +159,18 @@ class test_request extends abstract_request
 				$value = new \biru_controller\routing\path_segment\result( $value );
 				
 			if( isset( $extra_keys[ $key ] ) )
-				$non_path_parameters[ $key ] = $value;
+				$this->non_path_parameters[ $key ] = $value;
 			else 
-				$path_parameters[ $key ] = $value;
+				$this->path_parameters[ $key ] = $value;
 		}
 		$this->parameters = null;
 	}
 
 	public function recycle()
 	{
-		$this->request_parameters = new \stdClass;
-		$this->query_parameters = new \stdClass;
-		$this->path_parameters = new \stdClass;
+		$this->request_parameters = array();
+		$this->query_parameters = array();
+		$this->path_parameters = array();
 		$this->request_method = null;
 		$this->accepts = null;
 		$this->content_type = null;
@@ -167,7 +179,7 @@ class test_request extends abstract_request
     private function initialize_containers()
     {
     	$this->env = array();
-    	$this->cookies = new \stdClass;
+    	$this->cookies = array();
     }
     
     private function initialize_default_values()
@@ -227,7 +239,7 @@ class test_response extends abstract_response
 		return $this->response_code() == 404;
 	}
 	
-	public function redirect()
+	public function redirect( $to_url=null, $response_status=null )
 	{
 		return ( $this->response_code() <= 399 ) && ( $this->response_code() >= 300 );
 	}
@@ -324,6 +336,7 @@ class test_response extends abstract_response
 class test_session
 {
 	public $session_id;
+	public $__flash;
 	
 	public function __construct( $attributes = null )
 	{
@@ -355,73 +368,43 @@ class test_session
 		$this->delete();
 	}
 }
-	/**
-  # Essentially generates a modified Tempfile object similar to the object
-  # you'd get from the standard library CGI module in a multipart
-  # request. This means you can use an ActionController::TestUploadedFile
-  # object in the params of a test request in order to simulate
-  # a file upload.
-  #
-  # Usage example, within a functional test:
-  #   post :change_avatar, :avatar => ActionController::TestUploadedFile.new(Test::Unit::TestCase.fixture_path + '/files/spongebob.png', 'image/png')
-  # 
-  # Pass a true third parameter to ensure the uploaded file is opened in binary mode (only required for Windows):
-  #   post :change_avatar, :avatar => ActionController::TestUploadedFile.new(Test::Unit::TestCase.fixture_path + '/files/spongebob.png', 'image/png', :binary)
-  require 'tempfile'
-  class TestUploadedFile
-    # The filename, *not* including the path, of the "uploaded" file
-    attr_reader :original_filename
-
-    # The content type of the "uploaded" file
-    attr_reader :content_type
-
-    def initialize(path, content_type = Mime::TEXT, binary = false)
-      raise "#{path} file does not exist" unless File.exist?(path)
-      @content_type = content_type
-      @original_filename = path.sub(/^.*#{File::SEPARATOR}([^#{File::SEPARATOR}]+)$/) { $1 }
-      @tempfile = Tempfile.new(@original_filename)
-      @tempfile.binmode if binary
-      FileUtils.copy_file(path, @tempfile.path)
-    end
-
-    def path #:nodoc:
-      @tempfile.path
-    end
-
-    alias local_path path
-
-    def method_missing(method_name, *args, &block) #:nodoc:
-      @tempfile.send!(method_name, *args, &block)
-    end
-  end
-*/
-
-/**
-module Test
-  module Unit
-    class TestCase #:nodoc:
-      include ActionController::TestProcess
-    end
-  end
-end
-*/
   
 class SAKE_test_case extends \PHPUnit_Framework_TestCase
 {
-	/**
-  module TestProcess
-    def self.included(base)
-      # execute the request simulating a specific http method and set/volley the response
-      %w( get post put delete head ).each do |method|
-        base.class_eval <<-EOV, __FILE__, __LINE__
-          def #{method}(action, parameters = nil, session = nil, flash = nil)
-            @request.env['REQUEST_METHOD'] = "#{method.upcase}" if defined?(@request)
-            process(action, parameters, session, flash)
-          end
-        EOV
-      end
-    end
-    */
+    public function get( $action, $parameters = null, $session = null, $flash = null )
+    {
+    	if( isset( $this->request ) )
+    		$this->request->env['REQUEST_METHOD'] = "GET";
+    	return $this->process( $action, $parameters, $session, $flash ); 
+    }
+    
+    public function post( $action, $parameters = null, $session = null, $flash = null )
+    {
+    	if( isset( $this->request ) )
+    		$this->request->env['REQUEST_METHOD'] = "POST";
+    	return $this->process( $action, $parameters, $session, $flash ); 
+    }
+	
+    public function put( $action, $parameters = null, $session = null, $flash = null )
+    {
+    	if( isset( $this->request ) )
+    		$this->request->env['REQUEST_METHOD'] = "PUT";
+    	return $this->process( $action, $parameters, $session, $flash ); 
+    }
+	
+    public function delete( $action, $parameters = null, $session = null, $flash = null )
+    {
+    	if( isset( $this->request ) )
+    		$this->request->env['REQUEST_METHOD'] = "DELETE";
+    	return $this->process( $action, $parameters, $session, $flash ); 
+    }
+	
+    public function head( $action, $parameters = null, $session = null, $flash = null )
+    {
+    	if( isset( $this->request ) )
+    		$this->request->env['REQUEST_METHOD'] = "HEAD";
+    	return $this->process( $action, $parameters, $session, $flash ); 
+    }
 	
 	public function process( $action, $parameters = null, $session = null, $flash = null )
 	{
@@ -536,59 +519,4 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 			return call_user_func_array( array( $this->controller, $selector ), array_slice( func_get_args, 1, count( func_get_args() - 1 ) ) );
 		return call_user_func_array( array( parent, 'method_missing' ), func_get_args() );
 	}
-
-	public function fixture_file_upload( $path, $mime_type = null, $binary = false )
-	{
-		/**
-	}
-    
-    # Shortcut for ActionController::TestUploadedFile.new(Test::Unit::TestCase.fixture_path + path, type). Example:
-    #   post :change_avatar, :avatar => fixture_file_upload('/files/spongebob.png', 'image/png')
-    #
-    # To upload binary files on Windows, pass :binary as the last parameter. This will not affect other platforms.
-    #   post :change_avatar, :avatar => fixture_file_upload('/files/spongebob.png', 'image/png', :binary)
-    def fixture_file_upload(path, mime_type = nil, binary = false)
-      ActionController::TestUploadedFile.new(
-        Test::Unit::TestCase.respond_to?(:fixture_path) ? Test::Unit::TestCase.fixture_path + path : path, 
-        mime_type,
-        binary
-      )
-    end
-    */
-	}
-
-    # A helper to make it easier to test different route configurations.
-    # This method temporarily replaces ActionController::Routing::Routes
-    # with a new RouteSet instance. 
-    #
-    # The new instance is yielded to the passed block. Typically the block
-    # will create some routes using map.draw { map.connect ... }:
-    #
-    #  with_routing do |set|
-    #    set.draw do |map|
-    #      map.connect ':controller/:action/:id'
-    #        assert_equal(
-    #          ['/content/10/show', {}],
-    #          map.generate(:controller => 'content', :id => 10, :action => 'show')
-    #      end
-    #    end
-    #  end
-    #
-	/**
-    def with_routing
-      real_routes = ActionController::Routing::Routes
-      ActionController::Routing.module_eval { remove_const :Routes }
-
-      temporary_routes = ActionController::Routing::RouteSet.new
-      ActionController::Routing.module_eval { const_set :Routes, temporary_routes }
-
-      yield temporary_routes
-    ensure
-      if ActionController::Routing.const_defined? :Routes
-        ActionController::Routing.module_eval { remove_const :Routes }
-      end
-      ActionController::Routing.const_set(:Routes, real_routes) if real_routes
-    end
-  end
-  */
 }

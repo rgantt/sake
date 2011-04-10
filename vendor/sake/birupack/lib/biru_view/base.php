@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_view;
 
 class object_wrapper extends \stdClass{}
@@ -26,7 +26,7 @@ class base
     
     //delegate :request_forgery_protection_token, :to => :controller
 
-    static $method_names = array();
+    public $method_names = array();
     static $template_args = array();
     static $computed_public_paths = array();
 
@@ -176,8 +176,11 @@ class base
     public function __call( $name, $args )
     {
         set_error_handler( function ( $level, $text, $file, $line ){ return; } ); 
+        //print_r( $this->_template->__compiled_templates );
         if( !function_exists( $name ) )
             eval( $this->_template->__compiled_templates[ $name ] );
+        if( !function_exists( $name ) )
+        	throw new \biru_controller\sake_exception("Could not create dynamic method {$name}!");
         ob_start();
         echo $name( $args );
         return ob_get_clean();

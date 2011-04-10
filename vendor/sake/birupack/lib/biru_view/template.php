@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_view;
 
 class template
@@ -27,13 +27,13 @@ class template
         }
         else
         {
-            $this->source = $path_or_source;
-            $tihs->extension = $inline_type;
+            $this->source = "echo <<<END\n".addslashes( $path_or_source )."\r\nEND;";
+            $this->extension = $inline_type;
         }
         $this->method = $view->controller->action_name;
         $this->locals = is_array( $locals ) ? $locals : array();
         //$name = self::$class->handler_class_for_extension( $this->extension );
-        $name = '\biru_view\template_handlers\phtml';
+        $name = '\biru_view\template_handlers\phtml'; // only one handler for now
         $this->handler = new $name( $this->view );
     }
 
@@ -52,7 +52,8 @@ class template
 
     public function method_key()
     {
-        $this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->source() );
+        //$this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->source() );
+        $this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->method );
         return $this->method_key;
     }
 
