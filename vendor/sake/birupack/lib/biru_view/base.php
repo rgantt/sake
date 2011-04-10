@@ -46,7 +46,6 @@ class base
         }
     }
 
-    //public function initialize( $view_paths = array(), $assigns_for_first_render = array(), $controller = null )
     public function __construct( $view_paths = array(), $assigns_for_first_render = array(), $controller = null )
     {
         $this->assigns = $assigns_for_first_render;
@@ -154,15 +153,15 @@ class base
     {
         if( !$this->assigns_added )
         {
-            $this->assign_variables_from_controller;
+            $this->assign_variables_from_controller();
             $this->assigns_added = true;
         }
     }
 
     private function assign_variables_from_controller()
     {
-        foreach( $this->assigns as $key => $value )
-            $this->instance_variable_set( "{$key}", $value );
+        foreach( $this->assigns as $key => &$value )
+            $this->{$key} = &$value;
     }
 
     public function execute( &$template )

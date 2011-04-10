@@ -60,6 +60,8 @@ abstract class base implements controller
     protected $b_filters = array();
     protected $a_filters = array();
     protected $layout;
+    
+    private $url;
 
     public static $has_rendered = false;
     public static $asset_host = '';
@@ -117,7 +119,14 @@ abstract class base implements controller
         $this->initialize();
 
         //$this->log_processing();
-        $this->flash = (object)($this->session->__flash ? unserialize( $this->session->__flash ) : null);
+        if( !$this->session['flash'] )
+        {
+        	$this->session['flash'] = new flash();
+        	$this->flash = &$this->session['flash'];
+    	}
+    	else
+        	$this->flash = unserialize( $this->session['flash'] );
+        // this line might be messing with stuff
         $this->extract_globals( array_merge( $this->properties(), array( 'controller' => $this ) ) );
         $this->$method( $arguments );
 
@@ -279,6 +288,7 @@ abstract class base implements controller
 
     public function redirect_to( $options = array(), $response_status = array() )
     {
+    	$this->session['flash'] = serialize( $this->flash );
         if( $options == array() || empty( $options ) )
             throw new \sake_exception("cannot redirect to null");
         
@@ -295,7 +305,7 @@ abstract class base implements controller
                 throw new \sake_exception("double render error");
             $this->response->redirected_to = $options;
             $this->performed_redirect = true;
-            $this->session->__flash = serialize( $this->flash );
+//            $this->session['__flash'] = serialize( $this->flash );
             return $this->response->redirect( $options, \status_codes\interpret_status( $status ) );
         }
         else if( $options == 'back' )
@@ -536,9 +546,7 @@ abstract class base implements controller
         	$options['locals'] = ( isset( $options['locals'] ) ? $options['locals'] : array() );
         	$options['type'] = ( isset( $options['type'] ) ? $options['type'] : null );
             if( isset( $options['file'] ) )
-            {
                 return $this->render_for_file( $options['file'], $options['status'], $options['use_full_path'], $options['locals'] );
-            }
             else if( isset( $options['template'] ) )
                 return $this->render_for_file( $options['template'], $options['status'], true );
             else if( isset( $options['inline'] ) )
@@ -551,13 +559,9 @@ abstract class base implements controller
             {
                 $template = $this->default_template_name( $options['action'] );
                 if( $options['layout'] && !$this->template_exempt_from_layout( $template ) )
-                {
                     return $this->render_with_a_layout( array( 'file' => $template, 'status' => $options['status'], 'use_full_path' => true, 'layout' => true ) );
-                }
                 else
-                {
                     return $this->render_with_no_layout( array( 'file' => $template, 'status' => $options['status'], 'use_full_path' => true ) );
-                }
             }
             else if( isset( $options['xml'] ) )
             {
@@ -575,9 +579,7 @@ abstract class base implements controller
                     $partial = $this->default_template_name();
                 $this->add_variables_to_assigns();
                 if( isset( $options['collection'] ) )
-                {
                     return $this->render_for_text( $this->template->render_partial_collection( $partial, $options['collection'], $options['spacer_template'], $options['locals'], $options['status'] ) );
-                }
                 else
                 {
                 	$obj = isset( $options['object'] ) ? $options['object'] : null;
@@ -822,7 +824,7 @@ abstract class base implements controller
         }
         else
             $this->response->body = $text;
-        $this->session->__flash = null;
+        //$this->session->__flash = null;
         return $this->response->body;
     }
 
@@ -840,14 +842,32 @@ abstract class base implements controller
     private function add_instance_variables_to_assigns()
     {
         if( !self::$protected_variables_cache )
-            self::$protected_variables_cache = self::$protected_instance_variables;
-       /** foreach( $this->instance_variable_names() as $name )
+            self::$protected_variables_cache = $this->protected_instance_variables();
+        $props = get_object_vars( $this );
+       	foreach( $props as $name => $value )
         {
             if( in_array( $name, self::$protected_variables_cache ) )
-                next;
-            $this->assigns[ $name ] = $this->instance_variable_get( $name );
+                continue;
+            if( !is_string( $name ) && isset( $this->{$name} ) )
+            	continue;
+            $this->assigns[ $name ] = $value;
         }
-        */
+    }
+    
+    private function protected_instance_variables()
+    {
+    	if ( self::$view_controller_internals )
+    		return array( "assigns", "performed_redirect", "performed_render" );
+    	else
+    	{
+    		return array( 
+    			"url", "a_filters", "b_filters", "assigns",
+          		"performed_redirect", "performed_render", 
+          		"_request", "request", "_response", "response", "_params", "params",
+          		"_session", "session", "_cookies", "cookies", "template",
+          		"request_origin", "parent_controller", "name" 
+          	);
+    	}
     }
     
     private function performed()
@@ -885,7 +905,7 @@ abstract class base implements controller
         $this->cookies = $this->request->cookies(); // was &, threw notice
 
         $this->response = &$response;
-        $this->response->session = &$this->request->session;
+        $this->response->session = &$this->request->session();
 
         $this->session = &$this->response->session;
         $this->template = &$this->response->template;
@@ -902,7 +922,7 @@ abstract class base implements controller
 
     private function forget_variables_added_to_assigns()
     {
-        $this->variables_added = null;
+        $this->variables_added = false;
     }
 
     private function assign_default_content_type_and_charset()
@@ -931,7 +951,7 @@ abstract class base implements controller
         else if( $this->template_exists( $this->action_name ) && $this->template_public( $this->action_name ) )
             $this->default_render();
         else
-            throw new \sake_exception("no action responded to {$this->action_name}");
+            throw new sake_exception("no action responded to {$this->action_name}");
     }
     
     private function action_methods()
