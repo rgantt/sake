@@ -20,14 +20,13 @@ class concrete_base extends base
 		$this->set_default_layout("blank");
 	}
 	
-    # Process a test request called with a +TestRequest+ object.
-    static function process_test( $request )
+    static function process_test( &$request )
     {
     	$base = new self;
     	return $base->_process_test( $request );
     }
 
-    public function _process_test( $request )
+    public function _process_test( &$request )
     {
     	return $this->process( $request, new TestResponse() );
     }
@@ -43,11 +42,6 @@ class concrete_base extends base
 	{
 		return call_user_func_array( array( $this, 'process' ), func_get_args() );
 	}
-	
-    /*public function process( &$request, &$response, $method=null, $arguments=null )
-    {
-    	return $this->test( $request, $response );
-    }*/
 }
 
 class test_request extends abstract_request
@@ -70,25 +64,24 @@ class test_request extends abstract_request
 		
 		$this->initialize_containers();
 		$this->initialize_default_values();
-		//parent::__construct();
 	}
 	
-	public function query_parameters()
+	public function &query_parameters()
 	{
 		return $this->query_parameters;
 	}
 	
-	public function request_parameters()
+	public function &request_parameters()
 	{
 		return $this->request_parameters;
 	}
 
-	public function cookies()
+	public function &cookies()
 	{
 		return $this->cookies;
 	}
 	
-	public function session()
+	public function &session()
 	{
 		return $this->session;
 	}
@@ -200,7 +193,7 @@ class test_request extends abstract_request
     
     private function url_encoded_request_parameters()
     {
-    	$params = $this->request_parameters;
+    	$params = $this->request_parameters();
     	$types = array( 'controller', 'action', 'only_path' );
     	foreach( $types as $k )
     	{
@@ -214,24 +207,24 @@ class test_response extends abstract_response
 {
 	public function response_code()
 	{
-		return substr( $this->headers['Status'], 0, 3 );
+		return (int)substr( $this->headers['Status'], 0, 3 );
 	}
 	
 	public function code()
 	{
 		$code = explode( ' ', $this->headers['Status'] );
-		return $code[0];
+		return (int)$code[0];
 	}
 	
 	public function message()
 	{
 		$message = explode( ' ', $this->headers['Status'] );
-		return $message[1];
+		return (int)$message[1];
 	}
 	
 	public function success()
 	{
-		return $this->respones_code() == 200;
+		return $this->response_code() == 200;
 	}
 	
 	public function missing()
@@ -284,14 +277,16 @@ class test_response extends abstract_response
 		return !( $this->rendered_file == null );
 	}
 	
-	public function flash()
+	public function &flash()
 	{
-		return ( isset( $this->session['__flash'] ) ? $this->session['__flash'] : new \stdClass );
+		if( isset( $this->session['flash'] ) )
+			$this->session['flash'] = new flash();
+		return $this->session['flash'];
 	}
 	
 	public function has_flash()
 	{
-		return !empty( $this->session['__flash'] );
+		return !empty( $this->session['flash'] );
 	}
 	
 	public function has_flash_with_contents()
@@ -313,7 +308,7 @@ class test_response extends abstract_response
 	
 	public function template_objects()
 	{
-		return( isset( $this->template->assigns ) ? $this->template->assigns : new \stdClass );
+		return( isset( $this->template->assigns ) ? $this->template->assigns : array() );
 	}
 	
 	public function has_template_object( $name )
@@ -333,16 +328,38 @@ class test_response extends abstract_response
 	}
 }
 
-class test_session
+class test_session implements \ArrayAccess
 {
 	public $session_id;
-	public $__flash;
+	private $attributes;
 	
 	public function __construct( $attributes = null )
 	{
 		$this->session_id = '';
 		$this->attributes = $attributes;
 		$this->saved_attributes = null;
+	}
+	
+	public function offsetExists( $offset )
+	{
+		return isset( $this->attributes[ $offset ] );
+	}
+	
+	public function offsetGet( $offset )
+	{
+		return $this->offsetExists( $offset ) ? $this->attributes[ $offset ] : null;
+	}
+	
+	public function offsetSet( $offset, $value )
+	{
+		if( is_null( $offset ) )
+			throw new \sake_exception("Session offset requires named key");
+		$this->attributes[ $offset ] = $value;
+	}
+	
+	public function offsetUnset( $offset )
+	{
+		unset( $this->attributes[ $offset ] );
 	}
 	
 	public function data()
@@ -423,10 +440,12 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 		$parameters = !is_null( $parameters ) ? $parameters : new \stdClass;
 		$this->request->assign_parameters( $this->controller, $action, $parameters );
 		
+		//@request.session = ActionController::TestSession.new(session) unless session.nil?
 		if( $session !== null )
 			$this->request->session = new test_session( $session );
+		//@request.session["flash"] = ActionController::Flash::FlashHash.new.update(flash) if flash
 		if( $flash !== null )
-			$this->request->session['__flash'] = new \biru_controller\flash\flash_hash( $flash );
+			$this->request->session['flash'] = new flash( $flash );
 		$this->build_request_uri( $action, $parameters );
 		return $this->controller->process( $this->request, $this->response );
 	}
@@ -434,7 +453,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 	public function xml_http_request( $request_method, $action, $parameters = null, $session = null, $flash = null )
 	{
 		$this->request->env['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
-		$this->request->env['HTTP_ACCEPT'] = 'text\javascript, text/html, application/xml, text/xml, */*';
+		$this->request->env['HTTP_ACCEPT'] = 'text/javascript, text/html, application/xml, text/xml, */*';
 		
 		$val = $this->$request_method( $action, $parameters, $session, $flash );
 		unset( $this->request->env['HTTP_X_REQUESTED_WITH'] );
@@ -469,7 +488,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 		return $this->response->session;
 	}
 	
-	public function flash()
+	public function &flash()
 	{
 		return $this->response->flash;
 	}
