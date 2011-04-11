@@ -66,7 +66,7 @@ class template
     public function prepare()
     {
         $this->method_key();
-        $this->view->evaluate_assigns = true;
+        $this->view->evaluate_assigns();
         $this->view->current_render_extension = $this->extension;
 
         if( $this->handler instanceof \biru_view\template_handlers\compilable_template_handler )

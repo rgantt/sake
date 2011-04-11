@@ -23,8 +23,6 @@ class base
     static $cache_template_extensions = true;
     static $debug_rjs = false;
     static $pthml_variable = '_phtmlout';
-    
-    //delegate :request_forgery_protection_token, :to => :controller
 
     public $method_names = array();
     static $template_args = array();
@@ -49,12 +47,11 @@ class base
     public function __construct( $view_paths = array(), $assigns_for_first_render = array(), $controller = null )
     {
         $this->assigns = $assigns_for_first_render;
-        $this->assigns_added = null;
+        $this->assigns_added = false;
         $this->controller = &$controller;
         $this->logger = ( $controller instanceof base ? $controller->logger : null );
         $this->finder = new template_finder( $this, $view_paths );
     }
-
 
     public function render_file( $template_path, $use_full_path = true, $local_assigns = array() )
     {
@@ -77,7 +74,6 @@ class base
             return $this->update_page( $block );
         else if( is_array( $options ) )
         {
-            //$options = array_merge( $options, array( 'locals' => array(), 'use_full_path' => true ) );
             $options = array_merge( $options, array( 'use_full_path' => true ) );
             $partial_layout = $options['layout'];
             unset( $options['layout'] );
@@ -149,7 +145,7 @@ class base
         // returning(yield) { @content_for_layout = original_content_for_layout }
     }
 
-    private function evaluate_assigns()
+    public function evaluate_assigns()
     {
         if( !$this->assigns_added )
         {
@@ -175,7 +171,6 @@ class base
     public function __call( $name, $args )
     {
         set_error_handler( function ( $level, $text, $file, $line ){ return; } ); 
-        //print_r( $this->_template->__compiled_templates );
         if( !function_exists( $name ) )
             eval( $this->_template->__compiled_templates[ $name ] );
         if( !function_exists( $name ) )

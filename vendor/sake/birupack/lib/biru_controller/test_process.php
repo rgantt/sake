@@ -28,7 +28,7 @@ class concrete_base extends base
 
     public function _process_test( &$request )
     {
-    	return $this->process( $request, new TestResponse() );
+    	return $this->process( $request, new test_response );
     }
 
     public function process_with_test()
@@ -150,7 +150,6 @@ class test_request extends abstract_request
 		{
 			if( is_array( $value ) )
 				$value = new \biru_controller\routing\path_segment\result( $value );
-				
 			if( isset( $extra_keys[ $key ] ) )
 				$this->non_path_parameters[ $key ] = $value;
 			else 
@@ -194,11 +193,8 @@ class test_request extends abstract_request
     private function url_encoded_request_parameters()
     {
     	$params = $this->request_parameters();
-    	$types = array( 'controller', 'action', 'only_path' );
-    	foreach( $types as $k )
-    	{
+    	foreach( array( 'controller', 'action', 'only_path' ) as $k )
     		unset( $params[ $k ] );
-    	}
     	return $params;
     }
 }
@@ -317,7 +313,7 @@ class test_response extends abstract_response
 		return isset( $to[ $name ] );
 	}
 	
-	public function cookies()
+	public function &cookies()
 	{
 		return $this->cookies;
 	}
@@ -440,10 +436,8 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 		$parameters = !is_null( $parameters ) ? $parameters : new \stdClass;
 		$this->request->assign_parameters( $this->controller, $action, $parameters );
 		
-		//@request.session = ActionController::TestSession.new(session) unless session.nil?
 		if( $session !== null )
 			$this->request->session = new test_session( $session );
-		//@request.session["flash"] = ActionController::Flash::FlashHash.new.update(flash) if flash
 		if( $flash !== null )
 			$this->request->session['flash'] = new flash( $flash );
 		$this->build_request_uri( $action, $parameters );
@@ -483,7 +477,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 			return $this->response->template->assigns[ $key ];
 	}
 	
-	public function session()
+	public function &session()
 	{
 		return $this->response->session;
 	}
@@ -493,7 +487,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 		return $this->response->flash;
 	}
 	
-	public function cookies()
+	public function &cookies()
 	{
 		return $this->response->cookies;
 	}

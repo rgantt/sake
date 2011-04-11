@@ -18,10 +18,7 @@ class sake_exception extends \Exception
         return $str;
     }
 }
-
-class invalid_query_exception extends sake_exception
-{
-}
+class invalid_query_exception extends sake_exception {}
 
 interface controller 
 {
@@ -51,7 +48,7 @@ interface controller
 
 abstract class base implements controller
 {
-	protected $flash;
+	public $flash;
 	protected $params;
     protected $session;
     protected $should_forward = false;
@@ -97,7 +94,6 @@ abstract class base implements controller
             $_COOKIE = array_map('biru_controller\stripslashes_deep', $_COOKIE);
             $_REQUEST = array_map('biru_controller\stripslashes_deep', $_REQUEST);
         }
-        $this->flash = new flash();
         $this->layout('default'); 
         $ref = new \ReflectionObject( $this );
         $this->name = $ref->name;
@@ -119,13 +115,6 @@ abstract class base implements controller
         $this->initialize();
 
         //$this->log_processing();
-        if( !$this->session['flash'] )
-        {
-        	$this->session['flash'] = new flash();
-        	$this->flash = &$this->session['flash'];
-    	}
-    	else
-        	$this->flash = unserialize( $this->session['flash'] );
         // this line might be messing with stuff
         $this->extract_globals( array_merge( $this->properties(), array( 'controller' => $this ) ) );
         $this->$method( $arguments );
@@ -133,7 +122,9 @@ abstract class base implements controller
         $this->assign_default_content_type_and_charset();
         $response->request = &$request;
         $response->prepare();
-        return $response;
+        $clone = $response;
+        $this->process_cleanup();
+        return $clone;
     }
 
     public function template_public( $template_name )
@@ -276,7 +267,6 @@ abstract class base implements controller
 
     public function properties()
     {
-        $this->refresh_properties();
         $props = get_object_vars( $this );
         return $props;
     }
@@ -288,7 +278,6 @@ abstract class base implements controller
 
     public function redirect_to( $options = array(), $response_status = array() )
     {
-    	$this->session['flash'] = serialize( $this->flash );
         if( $options == array() || empty( $options ) )
             throw new \sake_exception("cannot redirect to null");
         
@@ -305,7 +294,6 @@ abstract class base implements controller
                 throw new \sake_exception("double render error");
             $this->response->redirected_to = $options;
             $this->performed_redirect = true;
-//            $this->session['__flash'] = serialize( $this->flash );
             return $this->response->redirect( $options, \status_codes\interpret_status( $status ) );
         }
         else if( $options == 'back' )
@@ -642,11 +630,23 @@ abstract class base implements controller
         return $m;
     }
     
-    public function reset_session()
+    protected function reset_session()
     {
     	$this->request->reset_session();
         $this->session = &$this->request->session;
         $this->response->session = $this->session;
+        unset( $this->flash );
+        $this->flash( true );
+    }
+    
+    protected function flash( $refresh = false )
+    {
+    	if( !isset( $this->flash ) || $refresh )
+    	{
+    		$this->session['flash'] = new flash();
+    		$this->flash = $this->session['flash'];
+    	}
+    	return $this->flash;
     }
 
     protected function render_with_a_layout( $options = null, $extra_options = array(), $block )
@@ -704,11 +704,6 @@ abstract class base implements controller
         if( strpos( $action_name, '/' ) && $this->template_path_includes_controller( $action_name ) )
             $action_name = $this->strip_out_controller( $action_name );
         return self::$controller_path."/{$action_name}";
-    }
-    
-    private function refresh_properties()
-    {
-    	return;
     }
     
     private function do_filter( $action, $filters )
@@ -824,7 +819,6 @@ abstract class base implements controller
         }
         else
             $this->response->body = $text;
-        //$this->session->__flash = null;
         return $this->response->body;
     }
 
@@ -900,6 +894,8 @@ abstract class base implements controller
 
     private function assign_shortcuts( &$request, &$response )
     {
+        $this->flash( true );
+        
         $this->request = &$request;
         $this->params = (object) $this->request->parameters();
         $this->cookies = $this->request->cookies(); // was &, threw notice
@@ -975,6 +971,18 @@ abstract class base implements controller
     {
         $m = new base();
         return $m->_process_cgi( new cgi(), $session_options );
+    }
+    
+    private function process_cleanup()
+    {
+    	if( $this->_session )
+    		$this->flash->sweep();
+    	$this->close_session();
+    }
+    
+    private function close_session()
+    {
+    	$this->session->close();
     }
 }
 ?>
