@@ -1,8 +1,8 @@
 <?
 $db['host']         = 'localhost';
-$db['user']         = 'root';
-$db['pass']         = '1m2i3d4f';
-$db['name']         = 'lovediscourse';
+$db['user']         = '';
+$db['pass']         = '';
+$db['name']         = '';
 
 $default['layout']  = 'sucks';
 $default['page']    = 'error';
