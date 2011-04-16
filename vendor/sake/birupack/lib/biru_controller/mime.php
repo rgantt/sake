@@ -1,6 +1,11 @@
 <?php
 namespace mime;
 
+function type( $symbol )
+{
+	return type::$_syms[ $symbol ];
+}
+
 class accept_item
 {
     public $order;
@@ -37,6 +42,7 @@ class type
 	static $SET = array();
 	static $EXTENSION_LOOKUP = array();
 	static $LOOKUP = array();
+	static $_syms = array();
     
 	static function lookup( $string )
     {
@@ -57,7 +63,8 @@ class type
 
     static function register( $string, $symbol, $mime_type_synonyms = array(), $extension_synonyms = array(), $skip_lookup = false )
     {
-        //define( strtoupper( $symbol ), new Type( $string, $symbol, $mime_type_synonyms ) );
+        $n = strtoupper( $symbol );
+        self::$_syms[ $n ] = new Type( $string, $symbol, $mime_type_synonyms );
         //$SET[] = constant( strtoupper( $symbol ) );
         self::$SET[] = new Type( $string, $symbol, $mime_type_synonyms );
 
