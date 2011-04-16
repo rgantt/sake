@@ -30,7 +30,7 @@ class accept_item
     }
 }
 
-class mime_type_not_found extends \biru_controller\sake_exception {}
+class mime_type_not_found extends \Exception {}
 
 class type
 {
@@ -42,7 +42,7 @@ class type
     {
         if( isset( self::$LOOKUP[ $string ] ) )
         	return self::$LOOKUP[ $string ];
-        throw new mime_type_not_found("Could not find a MIME handler for {$string}");
+        return null;
     }
 
     static function lookup_by_extension( $extension )

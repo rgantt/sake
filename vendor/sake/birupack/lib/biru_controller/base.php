@@ -48,7 +48,7 @@ interface controller
 
 abstract class base implements controller
 {
-	public $flash;
+	protected $flash;
 	protected $params;
     protected $session;
     protected $should_forward = false;
@@ -635,15 +635,15 @@ abstract class base implements controller
     	$this->request->reset_session();
         $this->session = &$this->request->session;
         $this->response->session = $this->session;
-        unset( $this->flash );
         $this->flash( true );
     }
     
-    protected function flash( $refresh = false )
+    protected function &flash( $refresh = false )
     {
     	if( !isset( $this->flash ) || $refresh )
     	{
-    		$this->session['flash'] = new flash();
+    		if( !($this->session['flash'] instanceof flash) )
+    			$this->session['flash'] = new flash();
     		$this->flash = $this->session['flash'];
     	}
     	return $this->flash;
@@ -855,11 +855,8 @@ abstract class base implements controller
     	else
     	{
     		return array( 
-    			"url", "a_filters", "b_filters", "assigns",
-          		"performed_redirect", "performed_render", 
-          		"_request", "request", "_response", "response", "_params", "params",
-          		"_session", "session", "_cookies", "cookies", "template",
-          		"request_origin", "parent_controller", "name" 
+    			"url", "a_filters", "b_filters", "assigns", "performed_redirect", "performed_render", "request", 
+    			"response", "params", "session", "cookies", "template", "request_origin", "parent_controller", "name" 
           	);
     	}
     }
@@ -894,8 +891,6 @@ abstract class base implements controller
 
     private function assign_shortcuts( &$request, &$response )
     {
-        $this->flash( true );
-        
         $this->request = &$request;
         $this->params = (object) $this->request->parameters();
         $this->cookies = $this->request->cookies(); // was &, threw notice
@@ -908,6 +903,8 @@ abstract class base implements controller
         $this->assigns = &$this->response->template->assigns;
 
         $this->headers = &$this->response->headers;
+        
+        $this->flash( true );
     }
 
     // this isn't doing its job right now!
@@ -975,7 +972,7 @@ abstract class base implements controller
     
     private function process_cleanup()
     {
-    	if( $this->_session )
+    	if( $this->session && ( $this->flash instanceof flash ) )
     		$this->flash->sweep();
     	$this->close_session();
     }

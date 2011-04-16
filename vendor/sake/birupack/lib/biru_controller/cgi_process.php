@@ -55,7 +55,7 @@ class cgi_request extends abstract_request
         return $this->request_parameters;
     }
 
-    public function cookies()
+    public function &cookies()
     {
         return $this->cgi->cookies();
     }
@@ -89,10 +89,9 @@ class cgi_request extends abstract_request
         return $this->standard_port();
     }
 
-    public function session()
+    public function &session()
     {
         throw new sake_exception("session");
-
         if( !$this->session )
         {
             if( $this->session_options == false )

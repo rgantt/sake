@@ -186,8 +186,6 @@ class test_request extends abstract_request
     	$this->env['SERVER_NAME'] = 'localhost';
     	$this->env['REQUEST_URI'] = '';
     	$this->env['SCRIPT_NAME'] = '';
-    	
-    	$this->env['CONTENT_TYPE'] = 'text';
     }
     
     private function url_encoded_request_parameters()
@@ -328,6 +326,7 @@ class test_session implements \ArrayAccess
 {
 	public $session_id;
 	private $attributes;
+	private $saved_attributes;
 	
 	public function __construct( $attributes = null )
 	{
@@ -338,18 +337,21 @@ class test_session implements \ArrayAccess
 	
 	public function offsetExists( $offset )
 	{
+		$this->data();
 		return isset( $this->attributes[ $offset ] );
 	}
 	
 	public function offsetGet( $offset )
 	{
-		return $this->offsetExists( $offset ) ? $this->attributes[ $offset ] : null;
+		$this->data();
+		return isset( $this->attributes[ $offset ] ) ? $this->attributes[ $offset ] : null;
 	}
 	
 	public function offsetSet( $offset, $value )
 	{
 		if( is_null( $offset ) )
 			throw new \sake_exception("Session offset requires named key");
+		$this->data();
 		$this->attributes[ $offset ] = $value;
 	}
 	
@@ -358,10 +360,10 @@ class test_session implements \ArrayAccess
 		unset( $this->attributes[ $offset ] );
 	}
 	
-	public function data()
+	public function &data()
 	{
 		if( !$this->attributes )
-			$this->attributes = isset( $this->saved_attributes ) ? $this->saved_attributes : new stdClass;
+			$this->attributes = isset( $this->saved_attributes ) ? $this->saved_attributes : array();
 		return $this->attributes;
 	}
 	
