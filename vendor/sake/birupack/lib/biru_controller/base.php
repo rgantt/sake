@@ -63,7 +63,7 @@ abstract class base implements controller
     public static $has_rendered = false;
     public static $asset_host = '';
     public static $view_paths = array( 'views' );
-    public static $default_charset = 'utf-8';
+    public static $default_charset = "utf-8";
     public static $action_methods = array( 'index' );
     public static $controller_path = '';
     public static $protected_variables_cache = array();
@@ -139,7 +139,7 @@ abstract class base implements controller
             $full_template_path = ( strpos( $template_name, '.' ) ? $template_name : "{$template_name}.phtml" );
             $display_paths = implode( ':', self::$view_paths );
             $template_type = ( preg_match( '/layouts/i', $template_name ) ? 'layout' : 'template' );
-            throw new \sake_exception("missing {$template_type} {$full_template_path} in view path {$display_paths}");
+            throw new sake_exception("missing {$template_type} {$full_template_path} in view path {$display_paths}");
         }
     }
 
@@ -546,7 +546,7 @@ abstract class base implements controller
             else if( isset( $options['action'] ) )
             {
                 $template = $this->default_template_name( $options['action'] );
-                if( $options['layout'] && !$this->template_exempt_from_layout( $template ) )
+                if( isset( $options['layout'] ) && $options['layout'] && !$this->template_exempt_from_layout( $template ) )
                     return $this->render_with_a_layout( array( 'file' => $template, 'status' => $options['status'], 'use_full_path' => true, 'layout' => true ) );
                 else
                     return $this->render_with_no_layout( array( 'file' => $template, 'status' => $options['status'], 'use_full_path' => true ) );
@@ -920,8 +920,10 @@ abstract class base implements controller
 
     private function assign_default_content_type_and_charset()
     {
-        $this->response->content_type = ( $this->response->content_type ? $this->response->content_type : '' ); //Mime::HTML
-        $tihs->response->charset = ( $this->response->charset ? $this->response->charset : self::$default_charset );
+    	$ct = $this->response->content_type();
+    	$cs = $this->response->charset();
+        $this->response->content_type = ( !empty( $ct ) ? $ct : \Mime\type('HTML') );
+        $this->response->charset = ( !empty( $cs ) ? $cs : self::$default_charset );
     }
 
     private function perform_action()
