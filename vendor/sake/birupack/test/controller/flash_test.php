@@ -14,39 +14,40 @@ class test_controller extends \biru_controller\concrete_base
 	
 	public function set_flash_now()
 	{
-		$this->flash->now['that'] = "hello";
-		$this->flash->now['foo'] = ( isset( $this->flash->now['foo'] ) ? $this->flash->now['foo'] : "bar" );
-		$this->flashy = $this->flash->now['that'];
-		$this->flash_copy = $this->flash;
+		$now = $this->flash->now();
+		$now['that'] = "hello";
+		$now['foo'] = "bar";
+		$this->flashy = $now['that'];
+		$this->flash_copy = clone $this->flash;
 		return $this->render( array( 'inline' => 'hello' ) );
 	}
 	
 	public function attempt_to_use_flash_now()
 	{
-		$this->flash_copy = $this->flash;
+		$this->flash_copy = clone $this->flash;
 		$this->flashy = $this->flash['that'];
 		return $this->render( array( 'inline' => 'hello' ) );
 	}
 
 	public function use_flash()
 	{
-		$this->flash_copy = $this->flash;
+		$this->flash_copy = clone $this->flash;
 		$this->flashy = $this->flash['that'];
 		return $this->render( array( 'inline' => 'hello' ) );
 	}
 	
 	public function use_flash_and_keep_it()
 	{
-		$this->flash_copy = $this->flash;
+		$this->flash_copy = clone $this->flash;
 		$this->flashy = $this->flash['that'];
-		//$this->flash->keep();
+		$this->flash()->keep();
 		return $this->render( array( 'inline' => 'hello' ) );
 	}
 	
 	public function use_flash_and_update_it()
 	{
-		$this->flash = array_merge( $this->flash, array( "this" => "hello again" ) );
-		$this->flash_copy = $this->flash;
+		$this->flash->update( array( "this" => "hello again" ) );
+		$this->flash_copy = clone $this->flash;
 		return $this->render( array( "inline" => "hello" ) );
 	}
 	
@@ -74,15 +75,11 @@ class flash_test extends SAKE_test_case
 	public function test_flash()
 	{
 		$this->get("set_flash");
-		print_r( $this->response->template->assigns );
 		$this->get("use_flash");
-		print_r( $this->response->template->assigns );
 		$this->assertEquals( "hello", $this->response->template->assigns['flashy'] );
 		$this->assertEquals( "hello", $this->response->template->assigns['flash_copy']['that'] );
 		
-		print_r( $this->controller->flash );
 		$this->get("use_flash");
-		print_r( $this->controller->flash );
 		$this->assertEquals( null, $this->response->template->assigns['flash_copy']['that'] );
 	}
 	
