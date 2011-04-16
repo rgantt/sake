@@ -30,8 +30,8 @@ abstract class abstract_request
     protected $path_parameters;
     
     abstract public function body();
-    abstract public function &query_parameters();
-    abstract public function &request_parameters();
+    abstract public function query_parameters();
+    abstract public function request_parameters();
     abstract public function &cookies();
     abstract public function &session();
     abstract public function reset_session();
@@ -169,7 +169,10 @@ abstract class abstract_request
         );
     }
 
-    public function host(){}
+    public function host()
+    {
+    	return $this->host;
+    }
 
     public function host_with_port()
     {
@@ -313,7 +316,7 @@ abstract class abstract_request
         $a = $this->content_type_from_legacy_post_data_format_header();
         if( $a )
             return $a;
-        return $this->env['CONTENT_TYPE'];
+        return ( isset( $this->env['CONTENT_TYPE'] ) ? $this->env['CONTENT_TYPE'] : null );
     }
 
     protected function content_type_without_parameters()
@@ -398,7 +401,9 @@ abstract class abstract_request
     {
     	$matches = array();
     	preg_match( '/^([^,\;]*)/', $content_type_with_parameters, $matches );
-    	return reset( $matches );
+    	if( $matches[0] )
+    		return reset( $matches );
+    	return null;
     }
     
     static function parse_query_parameters( $query_string )
@@ -414,5 +419,16 @@ abstract class abstract_request
     		$body = substr( $body, 0, strlen( $body ) - 1 );
     	preg_replace( '/&_=$/', '', $body );
     }
+    
+    public static function parse_request_parameters( $params )
+    {
+    	list( $p, $pass ) = array( array(), '' );
+    	foreach( $params as $key => $value )
+    	{
+    		$value = isset( $value[0] ) ? $value[0] : null;
+    		$pass .= "{$key}={$value}&";
+    	}
+    	parse_str( $pass, $p );
+    	return $p;
+    }
 }
-?>
