@@ -27,14 +27,18 @@ class abstract_response
 
     public function content_type()
     {
+    	if( !isset( $this->headers['Content-Type'] ) )
+    		return null;
         $content_type = explode( ';', $this->headers['Content-Type'] );
-        return $content_type[0];
+        return !empty( $content_type[0] ) ? $content_type[0] : null;
     }
 
     public function charset()
     {
+    	if( !isset( $this->headers['Content-Type'] ) )
+    		return null;
         $content_type = explode( ';', $this->headers['Content-Type'] );
-        return $content_type[1];
+        return !empty( $content_type[1] ) ? $content_type[1] : null;
     }
 
     public function redirect( $to_url, $response_status )

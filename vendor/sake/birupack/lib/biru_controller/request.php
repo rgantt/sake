@@ -15,7 +15,7 @@ $param_parsers = array(
     'JSON' 				=> 'json'
 );
 
-class unknown_http_method extends sake_exception {}
+class unknown_http_method extends \Exception {}
 
 abstract class abstract_request
 {
