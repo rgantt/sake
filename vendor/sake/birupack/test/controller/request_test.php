@@ -76,7 +76,7 @@ class request_test extends SAKE_test_case
 		$this->request->host = "www.google.co.jp";
 		$this->assertEquals( array( "www"), $this->request->subdomains(2) );
 
-		$this->request->host = "mail.www.google.com";
+		$this->request->host = "mail.www.google.co.jp";
 		$this->assertEquals( array( "mail", "www" ), $this->request->subdomains(2) );
 
 		$this->request->host = "foobar.foobar.com";
@@ -173,7 +173,7 @@ class request_test extends SAKE_test_case
 		$this->assertEquals( "/", $this->request->path() );
 
 		$this->request->relative_url_root = null;
-		$this->request->set_REQUEST_URI("/hieraki/");
+		$this->request->set_REQUEST_URI("/sake/");
 		$this->request->env['SCRIPT_NAME'] = "/sake/dispatch.cgi";
 		$this->assertEquals( "/sake/", $this->request->request_uri() );
 		$this->assertEquals( "/", $this->request->path() );
@@ -318,12 +318,12 @@ class request_test extends SAKE_test_case
 	public function test_content_type()
 	{
 		$this->request->env['CONTENT_TYPE'] = "text/html";
-		$this->assertEquals( "text/html", $this->request->content_type() );
+		$this->assertEquals( "text/html", (string)$this->request->content_type() );
 	}
 
 	public function test_content_no_type()
 	{
-		$this->assertEquals( "text", $this->request->content_type() );
+		$this->assertEquals( null, $this->request->content_type() );
 	}
 
 	public function test_user_agent()
