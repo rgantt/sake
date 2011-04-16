@@ -8,9 +8,9 @@ class url_rewriter_test extends SAKE_test_case
 {
 	protected function setUp()
 	{
-		$this->request = new \biru_controller\test_request;
+		$this->request = new test_request;
 		$this->params = new \stdClass;
-		$this->rewriter = new \biru_controller\url_rewriter( $this->request, $this->params );
+		$this->rewriter = new url_rewriter( $this->request, $this->params );
 	}
 
 	public function test_build_from_nice_query()
