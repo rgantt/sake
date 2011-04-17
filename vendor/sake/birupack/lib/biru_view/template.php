@@ -53,8 +53,13 @@ class template
     public function method_key()
     {
         //$this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->source() );
-        $this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->method );
+        $this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->remove_special( $this->filename ) : $this->method );
         return $this->method_key;
+    }
+    
+    private function remove_special( $string )
+    {
+    	return str_replace( array( '.', '/', '\\', ':' ), '', $string );
     }
 
     public function base_path_for_extension()
