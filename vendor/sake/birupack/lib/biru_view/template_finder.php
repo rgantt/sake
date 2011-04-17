@@ -119,17 +119,21 @@ class template_finder
 
     public function find_base_path_for( $template_file_name )
     {
-        if( file_exists( "app/views/{$template_file_name}" ) )
-            return 'views';
-        return false;
-        /**
-        foreach( self::$view_paths as $path )
+    	# this is extremely silly and need rewritten badly
+    	#print_r( self::$view_paths );
+    	#print_r( $this->_view_paths );
+        #if( file_exists( "app/views/{$template_file_name}" ) )
+        #    return 'views';
+        #return false;
+        #foreach( self::$view_paths as $path )
+        #print_r( self::$processed_view_paths );
+        foreach( $this->_view_paths as $path )
         {
-            if( preg_match( '/'.self::$processed_view_paths[ $path ].'/', $template_file_name ) )
-                return self::$processed_view_paths[ $path ];
+        	return $path;
+            #if( preg_match( '/'.self::$processed_view_paths[ $path ].'/', $template_file_name ) )
+            #    return self::$processed_view_paths[ $path ];
         }
         return false;
-         */
     }
 
     public function extract_base_path_from( $full_path )
