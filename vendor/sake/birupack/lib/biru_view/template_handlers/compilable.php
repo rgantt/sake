@@ -26,7 +26,7 @@ abstract class compilable_template_handler extends \biru_view\template_handler
         {
             $file_name = $template->filename ? $template->filename : 'compiled-template';
             $template->__compiled_templates[ $render_symbol ] = $render_source;
-            // MAGIC SHIT HERE
+            // INDISTINGUISHABLE FROM MAGIC
             // ActionView::Base::CompiledTemplates.module_eval(render_source, file_name, -line_offset)
         }
         catch( sake_exception $e )
