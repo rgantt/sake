@@ -134,7 +134,7 @@ abstract class base implements controller
     
     public function assert_existence_of_template_file( $template_name )
     {
-        if( !( $this->template_exists( $template_name ) || ( isset( $this->ignore_missing_templates ) && $this->ignore_missing_templates ) ) )
+        if( !( $this->template_exists( $template_name ) || ( isset( $this->ignore_missing_templates ) && !$this->ignore_missing_templates ) ) )
         {
             $full_template_path = ( strpos( $template_name, '.' ) ? $template_name : "{$template_name}.phtml" );
             $display_paths = implode( ':', self::$view_paths );
@@ -523,7 +523,7 @@ abstract class base implements controller
         if( !isset( $options['status'] ) )
         	$options['status'] = '';
         if( isset( $options['content_type'] ) )
-            $this->response->content_type = $options['content_type'];
+            $this->response->content_type( $options['content_type'] );
         if( isset( $options['location'] ) )
             $this->response->headers['Location'] = $this->url_for( $options['location'] );
 
@@ -554,7 +554,7 @@ abstract class base implements controller
             else if( isset( $options['xml'] ) )
             {
                 if( !$this->reponse->content_type )
-                    $this->response->content_type = ''; // Mime::XML
+                    $this->response->content_type = \Mime\type('XML');
                 return $this->render_for_text( $options['xml'], $options['status'] );
             }
             else if( isset( $options['json'] ) )
@@ -580,7 +580,7 @@ abstract class base implements controller
                 $this->template->evaluate_assigns();
 
                 //$generator = new biru_view\helpers\prototype_helper\javascript_generator( $this->template, $block );
-                $this->response->content_type = ''; //Mime::JS
+                $this->response->content_type = Mime\type('JS');
                 return $this->render_for_text( $generator, $options['status'] );
             }
             else if( isset( $options['nothing'] ) )
@@ -607,7 +607,7 @@ abstract class base implements controller
     
     public function active_layout( $passed_layout = null )
     {
-        $active_layout = $passed_layout ? $passed_layout : $this->default_layout( $this->response->template->template_format );
+        $active_layout = !is_null( $passed_layout ) ? $passed_layout : $this->default_layout( $this->response->template->template_format );
         if( preg_match( '/\//', $active_layout ) && !$this->layout_directory( $active_layout ) )
             return $active_layout;
         else
@@ -757,7 +757,7 @@ abstract class base implements controller
     {
         if( $template_with_options )
         {
-            $layout = isset( $options['layout'] ) ? $options['layout'] : false;;
+            $layout = isset( $options['layout'] ) ? $options['layout'] : null;
             if( $layout === false )
                 return null;
             else if( $layout == null || $layout == true )
@@ -922,8 +922,8 @@ abstract class base implements controller
     {
     	$ct = $this->response->content_type();
     	$cs = $this->response->charset();
-        $this->response->content_type = ( !empty( $ct ) ? $ct : \Mime\type('HTML') );
-        $this->response->charset = ( !empty( $cs ) ? $cs : self::$default_charset );
+        $this->response->content_type( !empty( $ct ) ? $ct : \Mime\type('HTML') );
+        $this->response->charset( !empty( $cs ) ? $cs : self::$default_charset );
     }
 
     private function perform_action()
