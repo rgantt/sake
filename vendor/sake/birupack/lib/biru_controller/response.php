@@ -15,7 +15,6 @@ class abstract_response
 
     public function content_type( $mime_type = null )
     {
-    	echo "called content type!\n";
     	if( !is_null( $mime_type ) )
     		$this->headers['Content-Type'] = $this->charset() ? "{$mime_type}; charset={$this->charset()}" : $mime_type;
     	if( !isset( $this->headers['Content-Type'] ) )
