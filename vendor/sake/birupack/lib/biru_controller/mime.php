@@ -3,7 +3,7 @@ namespace mime;
 
 function type( $symbol )
 {
-	return type::$_syms[ $symbol ];
+	return (string)type::$_syms[ $symbol ];
 }
 
 class accept_item
