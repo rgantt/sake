@@ -4,19 +4,7 @@ namespace biru_controller;
 class abstract_response
 {
     static $DEFAULT_HEADERS = array ( 'Cache-Control' => 'no-cache' );
-
-    public $request;
-    public $body;
-    public $headers;
-    public $session;
-    public $cookies;
-    public $assigns;
-    public $template;
-    public $redirected_to;
-    public $redirect_to_method_params;
-    public $layout;
-    public $content_type;
-    public $charset;
+    public $request, $body, $headers, $session, $cookies, $assigns, $template, $redirected_to, $redirect_to_method_params, $layout, $content_type, $charset;
 
     public function __construct()
     {
@@ -25,20 +13,29 @@ class abstract_response
         $this->assigns = array();
     }
 
-    public function content_type()
+    public function content_type( $mime_type = null )
     {
+    	echo "called content type!\n";
+    	if( !is_null( $mime_type ) )
+    		$this->headers['Content-Type'] = $this->charset() ? "{$mime_type}; charset={$this->charset()}" : $mime_type;
     	if( !isset( $this->headers['Content-Type'] ) )
     		return null;
         $content_type = explode( ';', $this->headers['Content-Type'] );
         return !empty( $content_type[0] ) ? $content_type[0] : null;
     }
 
-    public function charset()
+    public function charset( $encoding = null )
     {
+    	if( !is_null( $encoding ) )
+    	{
+    		$ct = $this->content_type() ? $this->content_type() : \Mime\type('HTML');
+    		$this->headers['Content-Type'] = "{$ct}; charset={$encoding}";
+    	}
     	if( !isset( $this->headers['Content-Type'] ) )
     		return null;
         $content_type = explode( ';', $this->headers['Content-Type'] );
-        return !empty( $content_type[1] ) ? $content_type[1] : null;
+        $charset = explode( '=', ( !empty( $content_type[1] ) ? $content_type[1] : '' ) );
+        return !empty( $charset[1] ) ? $charset[1] : null;
     }
 
     public function redirect( $to_url, $response_status )
