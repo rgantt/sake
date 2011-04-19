@@ -7,17 +7,23 @@ class sake_exception extends \Exception
 {
     public function unwind()
     {
-        $str  = "<pre>";
-        $str .= "application error!\n------------------\n\n";
-        $str .= "text: {$this->getMessage()}\n";
-        $str .= "file: {$this->getFile()}\n";
-        $str .= "line: {$this->getLine()}\n";
-        $str .= "stack:\n";
-        $str .= "{$this->getTraceAsString()}\n";
-        $str .= "</pre>";
-        return $str;
+        return <<< END
+        <pre>
+        application error!
+        ------------------
+        text: {$this->getMessage()}
+        file: {$this->getFile()}
+        line: {$this->getLine()}
+        stack:
+        {$this->getTraceAsString()}
+        </pre>
+END;
     }
 }
+
+class render_error extends sake_exception{}
+class double_render_error extends sake_exception{}
+class unknown_action extends sake_exception{}
 class invalid_query_exception extends sake_exception {}
 
 interface controller 
@@ -507,17 +513,17 @@ abstract class base implements controller
     public function _render( $options = null, $extra_options = array(), $block='' )
     {
         if( $this->performed() )
-            throw new \sake_exception("can only render or redirect once per action");
+            throw new \biru_controller\sake_exception("can only render or redirect once per action");
         if( $options == null )
             return $this->render_for_file( $this->default_template_name(), null, true );
         else if( !is_array( $extra_options ) )
-            throw new \sake_exception("you called render with invalid options");
+            throw new \biru_controller\sake_exception("you called render with invalid options");
         else
         {
             if( $options == 'update' )
                 $options = array_merge( $extra_options, array( 'update' => 'true' ) );
             else if( !is_array( $options ) )
-                throw new \sake_exception("you called render with invalid options");
+                throw new \biru_controller\render_error("you called render with invalid options");
         }
 
         if( !isset( $options['status'] ) )
@@ -559,7 +565,12 @@ abstract class base implements controller
             }
             else if( isset( $options['json'] ) )
             {
-                //
+            	if( is_array( $options['json'] ) )
+            		$options['json'] = json_encode( $options['json'] );
+            	if( isset( $options['callback'] ) && !empty( $options['callback'] ) )
+                	$options['json'] = $options['callback'].'('.$options['json'].')';
+            	$this->response->content_type( \Mime\type('JSON') );
+            	return $this->render_for_text( $options['json'], $options['status'] );
             }
             else if( isset( $options['partial'] ) && ( $partial = $options['partial'] ) )
             {
@@ -608,7 +619,7 @@ abstract class base implements controller
     public function active_layout( $passed_layout = null )
     {
         $active_layout = !is_null( $passed_layout ) ? $passed_layout : $this->default_layout( $this->response->template->template_format );
-        if( preg_match( '/\//', $active_layout ) && !$this->layout_directory( $active_layout ) )
+        if( preg_match( '/\//', $active_layout ) ) #&& !$this->layout_directory( $active_layout ) )
             return $active_layout;
         else
             return "layouts/{$active_layout}";
@@ -621,9 +632,9 @@ abstract class base implements controller
         $this->auto_layout = $auto;
     }
 
-    public function render_to_string( $options = null, $block )
+    public function render_to_string( $options = null )
     {
-        $m = $this->render( $options, $block );
+        $m = $this->render( $options );
         $this->erase_render_results();
         $this->forget_variables_added_to_assigns();
         $this->reset_variables_added_to_assigns();
@@ -918,6 +929,11 @@ abstract class base implements controller
         $this->variables_added = false;
     }
 
+    private function reset_variables_added_to_assigns()
+    {
+    	$this->template->assigns_added = null;
+    }
+
     private function assign_default_content_type_and_charset()
     {
     	$ct = $this->response->content_type();
@@ -946,7 +962,7 @@ abstract class base implements controller
         else if( $this->template_exists( $this->action_name ) && $this->template_public( $this->action_name ) )
             $this->default_render();
         else
-            throw new sake_exception("no action responded to {$this->action_name}");
+            throw new \biru_controller\unknown_action("no action responded to {$this->action_name}");
     }
     
     private function action_methods()
