@@ -172,7 +172,11 @@ class base
     {
         set_error_handler( function ( $level, $text, $file, $line ){ return; } ); 
         if( !function_exists( $name ) )
+        {
+        	if( strstr( $name, 'accessingparams' ) )
+        		print_r( $this->_template->__compiled_templates[ $name ] );
             eval( $this->_template->__compiled_templates[ $name ] );
+        }
         if( !function_exists( $name ) )
         	throw new \biru_controller\sake_exception("Could not create dynamic method {$name}!");
         ob_start();
