@@ -1,4 +1,4 @@
-<?
+<?php
 namespace biru_view;
 
 class partial_template extends template
