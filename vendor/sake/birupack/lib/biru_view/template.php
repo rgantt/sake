@@ -12,6 +12,9 @@ class template
     public $path_without_extension;
     public $method;
     public $method_key;
+    
+    static $template_handlers = array();
+    static $default_template_handlers = null;
 
     public function __construct( $view, $path_or_source, $use_full_path, $locals = array(), $inline = false, $inline_type = null )
     {
@@ -70,14 +73,13 @@ class template
 
     public function prepare()
     {
-        $this->method_key();
         $this->view->evaluate_assigns();
         $this->view->current_render_extension = $this->extension;
 
         if( $this->handler instanceof \biru_view\template_handlers\compilable_template_handler )
         {
             $this->handler->compile_template( $this );
-            $this->method = $this->view->method_names[ $this->method_key ];
+            $this->method = $this->view->method_names[ $this->method_key() ];
         }
     }
 
@@ -99,13 +101,10 @@ class template
         }
         else
             $this->filename = $this->path;
-
+            
         if( !$this->filename )
             throw new \sake_exception("couldn't find template file for {$this->path} in {$this->finder->view_paths->inspect}");
     }
-
-    static $template_handlers = array();
-    static $default_template_handlers = null;
 
     static function register_template_handler( $extension, $klass )
     {
