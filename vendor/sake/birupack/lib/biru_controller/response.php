@@ -54,9 +54,9 @@ class abstract_response
 
     private function handle_conditional_get()
     {
-        if( is_string( $this->body ) && ( $this->headers['Status'] ? $this->headers['Status'] == '200' : true ) && !$this->body == '' )
+        if( is_string( $this->body ) && ( $this->headers['Status'] ? substr( $this->headers['Status'], 0, 3 ) == '200' : true ) && !empty( $this->body ) )
         {
-            if( !$this->headers['ETag'] )
+            if( !isset( $this->headers['ETag'] ) || empty( $this->headers['ETag'] ) )
                 $this->headers['ETag'] = md5( $this->body );
             if( $this->headers['Cache-Control'] == self::$DEFAULT_HEADERS['Cache-Control'] )
                 $this->headers['Cache-Control'] = 'private, max-age=0, must-revalidate';
@@ -74,7 +74,7 @@ class abstract_response
         $content_type = isset( $this->headers['Content-Type'] ) ? $this->headers['Content-Type'] : false;
         $content_type = $content_type ? $content_type : ( isset( $this->headers['Content-type'] ) ? $this->headers['Content-type'] : false );
         $content_type = $content_type ? $content_type : ( isset( $this->headers['content-type'] ) ? $this->headers['content-type'] : null );
-        $this->headers['type'] = $content_type;
+        $this->headers['Content-Type'] = $content_type;
     }
 
     private function set_content_length()
