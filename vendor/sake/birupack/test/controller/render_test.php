@@ -5,11 +5,6 @@ require_once dirname(__FILE__).'/../sake_unit.php';
 require_once dirname(__FILE__).'/../../lib/biru_controller/flash.php';
 require_once dirname(__FILE__).'/../../lib/biru_view/partial_template.php';
 
-class games_controller extends \biru_controller\concrete_base
-{
-	public function hello_world(){}
-}
-
 class test_controller extends \biru_controller\concrete_base
 {
 	public function initialize()
@@ -298,13 +293,6 @@ class render_test extends SAKE_test_case
 		$this->assertEquals( "The value of foo is: ::this is a test::\n", $this->response->body );
 	}
 	
-	public function test_nested_rendering()
-	{
-		$this->controller = new games_controller;
-		$this->get('hello_world');
-		$this->assertEquals( "Living in a nested world", $this->response->body );
-	}
-	
 	/*
 	public function test_accessing_params_in_template()
 	{
@@ -323,7 +311,7 @@ class render_test extends SAKE_test_case
 	{
 		$this->get('render_hello_world_from_variable');
 		$this->assertEquals( $this->etag_for("hello ryan"), $this->response->headers['ETag'] );
-		$this->assertEquals( "private, max-age=0, must revalidate", $this->response->headers['Cache-Control'] );
+		$this->assertEquals( "private, max-age=0, must-revalidate", $this->response->headers['Cache-Control'] );
 	}
 	
 	public function test_render_against_etag_request_should_304_when_match()
@@ -346,7 +334,7 @@ class render_test extends SAKE_test_case
 	{
 		$this->get('render_hello_world_from_variable');
 		$expected_etag = $this->etag_for("hello ryan");
-		$this->assertEquals( $expected_etag, $this->response->headers['Etag'] );
+		$this->assertEquals( $expected_etag, $this->response->headers['ETag'] );
 		
 		$this->request->headers['HTTP_IF_NONE_MATCH'] = $expected_etag;
 		$this->get('render_hello_world_from_variable');
@@ -371,13 +359,6 @@ class render_test extends SAKE_test_case
 		$this->assertEquals( $expected_etag, $this->response->headers['ETag'] );
 	}
 	
-	public function test_etag_should_govern_renders_with_layouts_too()
-	{
-		$this->get('builder_layout_test');
-		$this->assertEquals( "<wrapper>\n<html>\n  <p>Hello </p>\n<p>This is grand!</p>\n</html>\n</wrapper>\n", $this->response->body );
-		$this->assertEquals( $this->etag_for("<wrapper>\n<html>\n  <p>Hello </p>\n<p>This is grand!</p>\n</html>\n</wrapper>\n"), $this->response->headers['ETag'] );
-	}
-	
 	public function test_should_render_html_formatted_partial()
 	{
 		$this->get('partial');
@@ -394,12 +375,6 @@ class render_test extends SAKE_test_case
 	{
 		$this->xhr('get', 'partial', array( 'format' => 'js' ) );
 		$this->assertEquals( 'partial js', $this->response->body );
-	}
-	
-	public function test_should_render_with_alternate_default_render()
-	{
-		$this->xhr( 'get', 'render_alternate_default' );
-		$this->assertEquals( '' /*%(Element.replace("foo", "partial html");)*/, $this->response->body );
 	}
 	
 	protected function etag_for( $text )
