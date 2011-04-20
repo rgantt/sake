@@ -386,14 +386,14 @@ class test_session implements \ArrayAccess
   
 class SAKE_test_case extends \PHPUnit_Framework_TestCase
 {
-	public function assert_template()
+	public function assert_template( $expected )
 	{
-		
+		return $this->assertEquals( $expected, $this->controler->_template->path, "Failed asserting that the template was set properly" );
 	}
 	
 	public function assert_response( $expected )
 	{
-		return $this->assertEquals( $expected, $this->response->response_code() );
+		return $this->assertEquals( $expected, $this->response->response_code(), "Failed asserting that the HTTP response code was as expected" );
 	}
 	
     public function get( $action, $parameters = null, $session = null, $flash = null )
