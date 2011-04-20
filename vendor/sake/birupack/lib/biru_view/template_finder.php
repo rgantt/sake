@@ -96,7 +96,8 @@ class template_finder
 
     public function pick_template( $template_path, $extension )
     {
-        $file_name = "{$template_path}.{$extension}";
+    	$extension = substr( $extension, 0, 1 ) == '.' ? $extension : ".{$extension}";
+        $file_name = "{$template_path}{$extension}";
         $base_path = $this->find_base_path_for( $file_name );
         return( !$base_path ? false : "{$base_path}/{$file_name}" );
     }
