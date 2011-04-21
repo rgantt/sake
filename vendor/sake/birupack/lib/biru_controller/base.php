@@ -714,7 +714,9 @@ abstract class base implements controller
             $action_name = $this->action_name;
         if( strpos( $action_name, '/' ) && $this->template_path_includes_controller( $action_name ) )
             $action_name = $this->strip_out_controller( $action_name );
-        return self::$controller_path."/{$action_name}";
+        //$tr = self::$controller_path."/{$action_name}\n";
+        $tr = $action_name;
+        return $tr;
     }
     
     private function do_filter( $action, $filters )
@@ -820,7 +822,6 @@ abstract class base implements controller
     private function render_for_text( $text = null, $status = null, $append_response = false )
     {
         $this->performed_render = true;
-        //$this->response->headers['Status'] = \status_codes\interpret_status( $status );
         $this->response->headers['Status'] = ( $status ? $status : DEFAULT_RENDER_STATUS_CODE );
         if( $append_response )
         {
