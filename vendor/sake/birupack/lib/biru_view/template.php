@@ -48,7 +48,7 @@ class template
 
     public function source()
     {
-        $src = "include \"app/{$this->filename}\";\n";
+        $src = "include \"{$this->filename}\";\n";
         $this->source = $this->source ? $this->source : $src;
         return $this->source;
     }
@@ -85,6 +85,7 @@ class template
 
     private function set_extension_and_file_name( $use_full_path )
     {
+    	echo "filename: {$this->filename}\n";
         list( $this->path_without_extension, $this->extension ) = $this->finder->path_and_extension( $this->path );
         if( $use_full_path )
         {
@@ -102,6 +103,7 @@ class template
         else
             $this->filename = $this->path;
             
+        echo "now filename: {$this->filename}\n";
         if( !$this->filename )
             throw new \sake_exception("couldn't find template file for {$this->path} in {$this->finder->view_paths->inspect}");
     }
@@ -126,43 +128,6 @@ class template
     static function handler_class_for_extension( $extension )
     {
         return ( $extension && self::$template_handlers[ $extension ] ) ? self::$template_handlers[ $extension ] : self::$default_template_handlers;
-    }
-
-    private function render_partial( $partial_path, $object_assigns = null, $local_assigns = array() )
-    {
-        throw new \sake_exception();
-        if( is_string( $partial_path ) || $partial_path == null )
-        {
-            $m = new partial_template( $this, $partial_path, $object_assigns, $local_assigns );
-            return $m->render();
-        }
-        else if( $partial_path instanceof stdClass )
-        {
-            throw new \sake_exception();
-            //builder_partial_path = partial_path.class.to_s.demodulize.underscore.sub(/_builder$/, '')
-            //113	          render_partial(builder_partial_path, object_assigns, (local_assigns || {}).merge(builder_partial_path.to_sym => partial_path))
-        }
-        else if( is_array( $partial_path ) ) // || ActiveRecord::Associations::AssociationCollection, ActiveRecord::Associations::HasManyThroughAssociation
-        {
-            if( count( $partial_path ) > 0 )
-                return $this->render_partial_collection( null, $partial_path, null, $local_assigns );
-            else
-                return "";
-        }
-        else
-            return $this->render_partial( 'whatwhatwhat', $partial_path, $local_assigns );
-    }
-        
-    private function render_partial_collection( $partial_path, $collection, $partial_spacer_template = null, $local_assigns = array() )
-    {
-        throw new \sake_exception();
-        if( !count( $collection ) )
-            return " ";
-        $spacer = ''; //partial_spacer_template ? render(:partial => partial_spacer_template) : ''
-        if( $partial_path == null )
-            return $this->render_partial_collection_with_unknown_partial_path( $collection, $local_assigns );
-        else
-            return $this->render_partial_collection_with_known_partial_path( $collection, $partial_path, $local_assigns );
     }
 
     private function render_partial_collection_with_known_partial_path( $collection, $partial_path, $local_assigns )
