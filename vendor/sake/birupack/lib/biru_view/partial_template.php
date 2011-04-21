@@ -6,7 +6,6 @@ class partial_template extends template
     public $variable_name;
     public $object;
 
-    //public function initialize( $view, $partial_path, $object = null, $locals = array() )
     public function __construct( $view, $partial_path, $object = null, $locals = array() )
     {
         list( $this->path, $this->variable_name ) = $this->extract_partial_name_and_path( $view, $partial_path );
@@ -51,9 +50,9 @@ class partial_template extends template
     {
         list( $path, $partial_name ) = $this->partial_pieces( $view, $partial_path );
         $old_partial_name = $partial_name;
-        $partial_name = explode( '/', $partial_name );
-        //$partial_name = explode( '.', $partial_name[ count( $partial_name ) ] );        
-        return array( "{$path}/_{$old_partial_name}", $partial_name[0] );
+        $partial_name = explode( '/', $partial_name );   
+        $fullpath = empty( $path ) ? "_{$old_partial_name}" : "{$path}/_{$old_partial_name}";
+        return array( $fullpath, $partial_name[0] );
     }
 
     private function partial_pieces( $view, $partial_path )
