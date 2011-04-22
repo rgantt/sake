@@ -1,7 +1,6 @@
 <?
 require_once "birupack/lib/biru_controller.php";
 require_once "birupack/lib/biru_view.php";
-require_once "birupack/lib/biru_pack.php";
 
 $parts = explode( '/', $_SERVER['PHP_SELF'] );
 array_shift( $parts );
