@@ -1,6 +1,6 @@
-<?
-require_once "birupack/lib/biru_controller.php";
-require_once "birupack/lib/biru_view.php";
+<?php
+require_once dirname(__FILE__)."/birupack/lib/biru_controller.php";
+require_once dirname(__FILE__)."/birupack/lib/biru_view.php";
 
 $parts = explode( '/', $_SERVER['PHP_SELF'] );
 array_shift( $parts );
@@ -53,19 +53,3 @@ class sake_exception extends \Exception
         return $str;
     }
 }
-
-/**
- * this function allows for exception throwing when a function returns false, e.g.:
- * 
- * $result = mysql_query( " sql query here " ) or except( mysql_error() );
- *
- * unfortunately, this isn't very flexible as it only allows a generic sake_exception 
- * to be thrown.
- * 
- * @param $string the error message to pass to the exception
- */
-function except( $string )
-{
-    throw new \sake_exception( $string );
-}
-?>
