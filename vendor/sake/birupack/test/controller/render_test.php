@@ -119,6 +119,7 @@ class test_controller extends \biru_controller\concrete_base
 	
 	public function render_to_string_test()
 	{
+		echo "rendering to string\n";
 		$this->foo = $this->render_to_string( array( 'inline' => "this is a test" ) );
 	}
 	

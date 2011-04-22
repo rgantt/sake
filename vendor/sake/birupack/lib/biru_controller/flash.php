@@ -75,7 +75,7 @@ class flash implements \ArrayAccess
 	public function offsetSet( $k, $v )
 	{
 		if( is_null( $k ) )
-			throw new \sake_exception("Flash offset requires named key");
+			throw new \biru_controller\sake_exception("Flash offset requires named key");
 		$this->keep( $k );
 		$this->flash[ $k ] = $v;
 	}

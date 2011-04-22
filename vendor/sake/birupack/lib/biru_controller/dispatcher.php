@@ -103,7 +103,7 @@ class dispatcher
             //$this->run_callbacks('after_dispatch', array( 'enumerator' => 'reverse_each' ) ); // this should be in a `finally`
             return $m;
         }
-        catch( sake_exception $e )
+        catch( \biru_controller\sake_exception $e )
         {
             throw $e;
         }

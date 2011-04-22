@@ -145,7 +145,7 @@ abstract class base implements controller
             $full_template_path = ( strpos( $template_name, '.' ) ? $template_name : "{$template_name}.phtml" );
             $display_paths = implode( ':', self::$view_paths );
             $template_type = ( preg_match( '/layouts/i', $template_name ) ? 'layout' : 'template' );
-            throw new sake_exception("missing {$template_type} {$full_template_path} in view path {$display_paths}");
+            throw new \biru_controller\sake_exception("missing {$template_type} {$full_template_path} in view path {$display_paths}");
         }
     }
 
@@ -285,7 +285,7 @@ abstract class base implements controller
     public function redirect_to( $options = array(), $response_status = array() )
     {
         if( $options == array() || empty( $options ) )
-            throw new \sake_exception("cannot redirect to null");
+            throw new \biru_controller\sake_exception("cannot redirect to null");
         
         if( is_array( $options ) && ( $status = $options['status'] ) )
             $options['status'] = null;
@@ -297,7 +297,7 @@ abstract class base implements controller
         if( is_string( $options ) && preg_match( '/^\w+:\/\/.*/', $options ) )
         {
             if( $this->performed() )
-                throw new \sake_exception("double render error");
+                throw new \biru_controller\sake_exception("double render error");
             $this->response->redirected_to = $options;
             $this->performed_redirect = true;
             return $this->response->redirect( $options, \status_codes\interpret_status( $status ) );
@@ -306,7 +306,7 @@ abstract class base implements controller
         {
             if( $this->request->env['HTTP_REFERRER'] )
                 return $this->redirect_to( $this->request->env['HTTP_REFERRER'], array( 'status' => $status ) );
-            throw new \sake_exception("redirect back error");
+            throw new \biru_controller\sake_exception("redirect back error");
         }
         else if( is_string( $options ) && $options !== '' )
         {

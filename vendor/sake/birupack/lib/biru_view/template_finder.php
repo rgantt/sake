@@ -3,12 +3,12 @@ namespace biru_view;
 
 class template_finder
 {
+	public $_view_paths;
+    public $template;
+    
     static $processed_view_paths = array();
     static $file_extension_cache = array( array() );
     static $view_paths = array();
-
-    public $_view_paths;
-    public $template;
 
     static function process_view_paths( $view_paths )
     {
@@ -19,6 +19,8 @@ class template_finder
                 next;
             self::$processed_view_paths[ $dir ] = array();
             $files = glob("{$dir}/**/*/**");
+            echo "globs:\n";
+            print_r( $files );
             foreach( $files as $file )
             {
                 if( !is_dir( $file ) )
@@ -55,16 +57,14 @@ class template_finder
 
     static function template_handler_extensions()
     {
-        return \ActionView\template::template_handler_extensions();
+        return \biru_view\template::template_handler_extensions();
     }
 
     static function reload()
     {
         $view_paths = array_keys( self::$processed_view_paths );
-
         self::$processed_view_paths = array();
         self::$file_extension_cache = array( array() );
-
         self::process_view_paths( $view_paths );
     }
 
@@ -96,9 +96,11 @@ class template_finder
 
     public function pick_template( $template_path, $extension )
     {
+    	echo "template path: {$template_path}, ext: {$extension}\n";
     	$extension = substr( $extension, 0, 1 ) == '.' ? $extension : ".{$extension}";
         $file_name = "{$template_path}{$extension}";
         $base_path = $this->find_base_path_for( $file_name );
+        echo "base path: {$base_path}\n";
         return( !$base_path ? false : "{$base_path}/{$file_name}" );
     }
 

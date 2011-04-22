@@ -378,7 +378,7 @@ abstract class abstract_request
 	    			return array();
     		}
     	}
-    	catch( sake_exception $e )
+    	catch( \biru_controller\sake_exception $e )
     	{
     		throw $e;
     	}

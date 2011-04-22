@@ -28,28 +28,5 @@ function __autoload( $name )
     	@include_once SAKE_ROOT."/app/helpers/{$cls}_helper.php";
     }
     else
-        throw new \sake_exception( "attempt to call undefined class {$name}" );
-}
-
-/**
- * a generic exception class that can be subclassed for various purposes throughout the framework
- * to provide extra utility for more finely-grained exception handling logic
- * 
- * @author bsdlite
- */
-
-class sake_exception extends \Exception
-{
-    public function unwind()
-    {
-        $str  = "<pre>";
-        $str .= "application error!\n------------------\n\n";
-        $str .= "text: {$this->getMessage()}\n";
-        $str .= "file: {$this->getFile()}\n";
-        $str .= "line: {$this->getLine()}\n";
-        $str .= "stack:\n";
-        $str .= "{$this->getTraceAsString()}\n";
-        $str .= "</pre>";
-        return $str;
-    }
+        throw new \biru_controller\sake_exception( "attempt to call undefined class {$name}" );
 }

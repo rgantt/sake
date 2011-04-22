@@ -91,7 +91,7 @@ class cgi_request extends abstract_request
 
     public function &session()
     {
-        throw new sake_exception("session");
+        throw new \biru_controller\sake_exception("session");
         if( !$this->session )
         {
             if( $this->session_options == false )
@@ -101,7 +101,7 @@ class cgi_request extends abstract_request
                 $sk = $this->session_options_with_string_key();
                 $qp = $this->query_parameters();
                 iF( $this->cookie_only() && $qp[ $sk['session_key'] ] )
-                    throw new sake_exception("session fixation attempt");
+                    throw new \biru_controller\sake_exception("session fixation attempt");
                 $value = $sk['new_session'];
                 if( $value == 'true' )
                     $this->session = $this->new_session();
@@ -111,7 +111,7 @@ class cgi_request extends abstract_request
                     {
                         $this->session = new \cgi\session( $this->cgi, $sk );
                     }
-                    catch( sake_exception $e )
+                    catch( \biru_controller\sake_exception $e )
                     {
                         $this->session = array();
                     }
@@ -119,7 +119,7 @@ class cgi_request extends abstract_request
                 else if( $value == null )
                     $this->session = new \cgi\session( $this->cgi, $sk );
                 else
-                    throw new sake_exception("invalid new_session option: {$value}");
+                    throw new \biru_controller\sake_exception("invalid new_session option: {$value}");
             }
             // stale_session_check! do ... @session['__valid_session']
         }

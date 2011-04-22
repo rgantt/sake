@@ -350,7 +350,7 @@ class test_session implements \ArrayAccess
 	public function offsetSet( $offset, $value )
 	{
 		if( is_null( $offset ) )
-			throw new \sake_exception("Session offset requires named key");
+			throw new \biru_controller\sake_exception("Session offset requires named key");
 		$this->data();
 		$this->attributes[ $offset ] = $value;
 	}
@@ -388,7 +388,9 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 {
 	public function assert_template( $expected )
 	{
-		return $this->assertEquals( $expected, $this->controler->_template->path, "Failed asserting that the template was set properly" );
+		print_r( $this->controller->template );
+		print_r( $this->controller->_template );
+		return $this->assertEquals( $expected, $this->controller->_template->path, "Failed asserting that the template was set properly" );
 	}
 	
 	public function assert_response( $expected )
@@ -437,7 +439,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 		foreach( $vals as $iv_name )
 		{
 			if( !isset( $this->$iv_name ) )
-				throw new \sake_exception("{$iv_name} is null: make sure you set it in your test's setup method"); 
+				throw new \biru_controller\sake_exception("{$iv_name} is null: make sure you set it in your test's setup method"); 
 		}
 		
 		$this->request->recycle();
@@ -476,7 +478,7 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 	{
 		$redirected_controller = $this->response->redirect_to['controller'];
 		if( $redirected_controller && ( $redirected_controllerd != $this->controller->controller_name ) )
-			throw new \sake_exception("Can't follow redirects outside of current controller (from {$this->controller->controller_name} to {$redirected_controller}");
+			throw new \biru_controller\sake_exception("Can't follow redirects outside of current controller (from {$this->controller->controller_name} to {$redirected_controller}");
 		unset( $this->response->redirected_to[ $action ] );
 		$this->get( true, $this->response->redirected_to );
 	}

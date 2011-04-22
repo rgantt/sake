@@ -14,7 +14,7 @@ try
 	list( $controller, $request, $response, $output ) = biru_controller\dispatcher::dispatch( new biru_controller\cgi() );
 	echo $controller->process( $request, $response )->out( $output );
 }
-catch( \sake_exception $e )
+catch( \biru_controller\sake_exception $e )
 {
 	echo $e->unwind();
 }
