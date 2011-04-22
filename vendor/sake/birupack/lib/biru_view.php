@@ -1,4 +1,4 @@
-<?
+<?php
 require_once 'biru_view/template_finder.php';
 require_once 'biru_view/base.php';
 require_once 'biru_view/template.php';
@@ -16,4 +16,3 @@ require_once 'biru_view/helpers/asset_tag_helper.php';
 require_once 'biru_view/helpers/javascript_helper.php';
 require_once 'biru_view/helpers/mootools_helper.php';
 require_once 'biru_view/helpers/capture_helper.php';
-?>
