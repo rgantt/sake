@@ -8,13 +8,8 @@ array_pop( $parts );
 define( 'SAKE_PATH', join( '/', $parts ) );
 
 /**
- * a php magic function that is called whenever an attempt is made to instantiate (or call a static method of) a
- * class that is not currently defined in the global namespace.
- * 
- * the sake implementation of this function allows for "intelligent" run-time class loading. it has the added benefit
- * of attempting to include the associated controller's helper file at load time.
- * 
- * @param $name
+ * called whenever an attempt is made to instantiate (or call a static method of) a class that 
+ * is not currently defined. attempts to include the controller's helper file at load time.
  */
 function __autoload( $name )
 {
