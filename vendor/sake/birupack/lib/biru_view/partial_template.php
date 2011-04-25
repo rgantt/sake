@@ -50,9 +50,12 @@ class partial_template extends template
     {
         list( $path, $partial_name ) = $this->partial_pieces( $view, $partial_path );
         $old_partial_name = $partial_name;
-        $partial_name = explode( '/', $partial_name );   
+        $partial_name = explode( '/', $partial_name );
+        $partial_name = end( $partial_name );
+        $partial_name = explode( '.', $partial_name );
+        $partial_name = reset( $partial_name );
         $fullpath = empty( $path ) ? "_{$old_partial_name}" : "{$path}/_{$old_partial_name}";
-        return array( $fullpath, $partial_name[0] );
+        return array( $fullpath, $partial_name );
     }
 
     private function partial_pieces( $view, $partial_path )
@@ -60,7 +63,10 @@ class partial_template extends template
         if( strpos( $partial_path, '/' ) !== false )
             return array( dirname( $partial_path ), basename( $partial_path ) );
         else
-            return array( $view->controller->class->controller_path, $partial_path );
+        {
+        	$cls = get_class( $view->controller );
+            return array( $cls::$controller_path, $partial_path );
+        }
     }
 
     private function initialize_counter()
