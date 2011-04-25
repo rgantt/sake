@@ -8,32 +8,34 @@ class template_finder
     
     static $processed_view_paths = array();
     static $file_extension_cache = array( array() );
+    
     static $view_paths = array();
 
     static function process_view_paths( $view_paths )
     {
         foreach( $view_paths as $dir )
         {
-            //if( !isset( self::$processed_views_paths[ $dir ] ) )
-            if( isset( self::$processed_views_paths[ $dir ] ) )
-                next;
+            if( isset( self::$processed_view_paths[ $dir ] ) )
+                continue;
             self::$processed_view_paths[ $dir ] = array();
-            $files = glob("{$dir}/**/*/**");
-            echo "globs:\n";
-            print_r( $files );
+            $f1 = glob("{$dir}/*");
+            $f2 = glob("{$dir}/*/*.*");
+            $f3 = glob("{$dir}/*.*");
+            $files = array_unique( array_merge( $f1, $f2, $f3 ) );
             foreach( $files as $file )
             {
                 if( !is_dir( $file ) )
                 {
-                    $paths = explode( '/', $file );
-                    self::$processed_view_paths[ $dir ] = substr( $paths[ count( $paths ) ] - 1, 1 ); // remove preceding slash from last element
-
+                    $rel_path = explode( $dir, $file );
+                    $rel_path = end( $rel_path );
+                    $rel_path = preg_replace( '/^\//', '', $rel_path );
+                    self::$processed_view_paths[ $dir ][] = $rel_path; // remove preceding slash from last element
                     $extensions = explode( '.', $file );
-                    $extension = $extensions[ count( $extensions ) - 1 ];
-                    if( in_array( $extension, $this->template_handler_extensions() ) )
+                    $extension = end( $extensions );
+                    if( in_array( $extension, self::template_handler_extensions() ) )
                     {
                         $k = explode( $dir, $file );
-                        $key = preg_replace( '/^\//', '', preg_replace( '/\.(\w+)$/', '', $k[ count( $k ) - 1 ] ) );
+                        $key = preg_replace( '/^\//', '', preg_replace( '/\.(\w+)$/', '', end( $k ) ) );
                         self::$file_extension_cache[ $dir ][ $key ] = $extension;
                     }
                 }
@@ -71,9 +73,8 @@ class template_finder
     public function __construct( &$template, $view_paths )
     {
         $this->template = $template;
-        $this->_view_paths = $view_paths; // args.flatten
-        //$this->_view_paths = ''; // @view_paths.respond_to?(:find) ? @view_paths.dup : [*@view_paths].compact
-        //$this->check_view_paths( $this->_view_paths );
+        $this->_view_paths = $view_paths;
+        $this->check_view_paths( $this->_view_paths );
     }
 
     public function prepend_view_path( $path )
@@ -96,12 +97,10 @@ class template_finder
 
     public function pick_template( $template_path, $extension )
     {
-    	echo "template path: {$template_path}, ext: {$extension}\n";
     	$extension = substr( $extension, 0, 1 ) == '.' ? $extension : ".{$extension}";
         $file_name = "{$template_path}{$extension}";
         $base_path = $this->find_base_path_for( $file_name );
-        echo "base path: {$base_path}\n";
-        return( !$base_path ? false : "{$base_path}/{$file_name}" );
+        return( empty( $base_path ) ? false : "{$base_path}/{$file_name}" );
     }
 
     public function template_exists( $template_path, $extension )
@@ -122,21 +121,12 @@ class template_finder
 
     public function find_base_path_for( $template_file_name )
     {
-    	# this is extremely silly and need rewritten badly
-    	#print_r( self::$view_paths );
-    	#print_r( $this->_view_paths );
-        #if( file_exists( "app/views/{$template_file_name}" ) )
-        #    return 'views';
-        #return false;
-        #foreach( self::$view_paths as $path )
-        #print_r( self::$processed_view_paths );
-        foreach( $this->_view_paths as $path )
-        {
-        	return $path;
-            #if( preg_match( '/'.self::$processed_view_paths[ $path ].'/', $template_file_name ) )
-            #    return self::$processed_view_paths[ $path ];
-        }
-        return false;
+    	foreach( $this->_view_paths as $path )
+    	{
+    		if( in_array( $template_file_name, self::$processed_view_paths[ $path ] ) )
+    			return $path;
+    	}
+    	return false;
     }
 
     public function extract_base_path_from( $full_path )
@@ -201,8 +191,7 @@ class template_finder
         foreach( $view_paths as $path )
         {
             if( !isset( self::$processed_view_paths[ $path ] ) )
-                throw new \sake_exception( $path );
+                throw new \biru_controller\sake_exception( $path );
         }
     }
 }
-?>
