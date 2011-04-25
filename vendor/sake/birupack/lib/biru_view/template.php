@@ -85,7 +85,6 @@ class template
 
     private function set_extension_and_file_name( $use_full_path )
     {
-    	echo "filename: {$this->filename}\n";
         list( $this->path_without_extension, $this->extension ) = $this->finder->path_and_extension( $this->path );
         if( $use_full_path )
         {
@@ -103,9 +102,8 @@ class template
         else
             $this->filename = $this->path;
             
-        echo "now filename: {$this->filename}\n";
         if( !$this->filename )
-            throw new \sake_exception("couldn't find template file for {$this->path} in {$this->finder->view_paths->inspect}");
+            throw new \biru_controller\sake_exception("couldn't find template file for {$this->path} in {$this->finder->_view_paths}");
     }
 
     static function register_template_handler( $extension, $klass )
@@ -116,7 +114,9 @@ class template
 
     static function template_handler_extensions()
     {
-        return asort( array_keys( self::$template_handlers ) );
+    	$keys = array_keys( self::$template_handlers );
+    	asort( $keys );
+        return $keys;
     }
 
     static function register_default_template_handler( $extension, $klass )
