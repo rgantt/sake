@@ -68,7 +68,7 @@ abstract class base implements controller
 
     public static $has_rendered = false;
     public static $asset_host = '';
-    public static $view_paths = array( 'views' );
+    public static $view_paths = array();
     public static $default_charset = "utf-8";
     public static $action_methods = array( 'index' );
     public static $controller_path = '';
@@ -86,6 +86,12 @@ abstract class base implements controller
     
     abstract public function initialize();
 
+    public static function construct()
+    {
+    	self::$view_paths = array( 'views' );
+    	\biru_view\template_finder::process_view_paths( self::$view_paths );
+    }
+    
     final public function __construct()
     {
         if (get_magic_quotes_gpc()) 
@@ -103,7 +109,7 @@ abstract class base implements controller
         $this->layout('default'); 
         $ref = new \ReflectionObject( $this );
         $this->name = $ref->name;
-        self::$controller_path = preg_replace( '/_controller$/', '', $this->name );
+        self::$controller_path = preg_replace( '/^[^\r\n]+\\\/', '', preg_replace( '/_controller$/', '', $this->name ) );
     }
     
     public function _process_cgi( $cgi, $session_options = array() )
@@ -143,7 +149,7 @@ abstract class base implements controller
         if( !( $this->template_exists( $template_name ) || ( isset( $this->ignore_missing_templates ) && !$this->ignore_missing_templates ) ) )
         {
             $full_template_path = ( strpos( $template_name, '.' ) ? $template_name : "{$template_name}.phtml" );
-            $display_paths = implode( ':', self::$view_paths );
+            $display_paths = implode( ':', self::view_paths() );
             $template_type = ( preg_match( '/layouts/i', $template_name ) ? 'layout' : 'template' );
             throw new \biru_controller\sake_exception("missing {$template_type} {$full_template_path} in view path {$display_paths}");
         }
@@ -896,7 +902,7 @@ abstract class base implements controller
 
     private function initialize_template_class( &$response )
     {
-        $response->template = new \biru_view\base( self::$view_paths, array(), $this );
+        $response->template = new \biru_view\base( self::view_paths(), array(), $this );
         $response->redirected_to = null;
         $this->performed_render = $this->performed_redirect = false;
     }
@@ -978,9 +984,15 @@ abstract class base implements controller
         self::$action_methods = array_unique( self::$action_methods );
     }
 
-    public static function view_paths( $value )
+    public static function view_paths( $value = null )
     {
-        \biru_view\template_finder::process_view_paths( $value );
+    	if( $value === null )
+    		return self::$view_paths;
+    	else
+    	{
+    		self::$view_paths = $value;
+        	\biru_view\template_finder::process_view_paths( $value );
+    	}
     }
 
     public static function process_cgi( $cgi = null, $session_options = array() )
