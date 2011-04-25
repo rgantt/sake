@@ -388,8 +388,6 @@ class SAKE_test_case extends \PHPUnit_Framework_TestCase
 {
 	public function assert_template( $expected )
 	{
-		print_r( $this->controller->template );
-		print_r( $this->controller->_template );
 		return $this->assertEquals( $expected, $this->controller->_template->path, "Failed asserting that the template was set properly" );
 	}
 	
