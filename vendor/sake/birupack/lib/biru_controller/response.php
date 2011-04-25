@@ -60,7 +60,7 @@ class abstract_response
                 $this->headers['ETag'] = md5( $this->body );
             if( $this->headers['Cache-Control'] == self::$DEFAULT_HEADERS['Cache-Control'] )
                 $this->headers['Cache-Control'] = 'private, max-age=0, must-revalidate';
-            if( $this->request->headers['HTTP_IF_NONE_MATCH'] == $this->headers['ETag'] )
+            if( isset( $this->request->headers['HTTP_IF_NONE_MATCH'] ) && ( $this->request->headers['HTTP_IF_NONE_MATCH'] == $this->headers['ETag'] ) )
             {
                 $this->headers['Status'] = '304 Not Modified';
                 $this->body = '';
