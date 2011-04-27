@@ -720,8 +720,8 @@ abstract class base implements controller
             $action_name = $this->action_name;
         if( strpos( $action_name, '/' ) && $this->template_path_includes_controller( $action_name ) )
             $action_name = $this->strip_out_controller( $action_name );
-        //$tr = self::$controller_path."/{$action_name}\n";
-        $tr = $action_name;
+       	$tr = self::$controller_path."/{$action_name}";
+        //$tr = $action_name;
         return $tr;
     }
     
@@ -886,7 +886,7 @@ abstract class base implements controller
 
     private function default_render()
     {
-        $this->render();
+        return $this->render();
     }
 
     private function template_exists( $template_name )
@@ -957,17 +957,17 @@ abstract class base implements controller
             $method = $this->action_name;
             $this->$method();
             if( !$this->performed() )
-                $this->default_render();
+                return $this->default_render();
         }
         else if( method_exists( $this, 'method_missing' ) )
         {
             $this->method_missing( $this->action_name );
             if( !$this->performed() )
-                $this->default_render();
+                return $this->default_render();
         }
         //else if( $this->template_exists() && $this->template_public() )
         else if( $this->template_exists( $this->action_name ) && $this->template_public( $this->action_name ) )
-            $this->default_render();
+            return $this->default_render();
         else
             throw new \biru_controller\unknown_action("no action responded to {$this->action_name}");
     }
