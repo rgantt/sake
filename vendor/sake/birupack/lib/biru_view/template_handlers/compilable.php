@@ -39,11 +39,12 @@ abstract class compilable_template_handler extends \biru_view\template_handler
     private function can_compile_template( &$template )
     {
         $method_key = $template->method_key();
-        $render_symbol = isset( $this->view->method_names[ $method_key ] ) ? $this->view->method_names[ $method_key ] : null;
-        $compile_time = self::$compile_time[ $render_symbol ];
+        $render_symbol = isset( $this->view->method_names[ $method_key ] ) ? $this->view->method_names[ $method_key ] : false;
+        $compile_time = isset( self::$compile_time[ $render_symbol ] ) ? self::$compile_time[ $render_symbol ] : false;
         if( $compile_time && $this->supports_local_assigns( $render_symbol, $template->locals ) )
         {
-            if( $template->filename && $this->view->cache_template_loading() )
+        	$cls = get_class( $this->view );
+            if( $template->filename && $cls::$cache_template_loading )
                 return $this->template_changed_since( $template->filename, $compile_time );
         }
         return true;
@@ -51,9 +52,9 @@ abstract class compilable_template_handler extends \biru_view\template_handler
 
     private function assign_method_names( &$template )
     {
-        if( !isset( $this->view->method_names[ $template->method_key ] ) )
-            $this->view->method_names[ $template->method_key ] = $this->compiled_method_name( $template );
-        return $this->view->method_names[ $template->method_key ];
+        if( !isset( $this->view->method_names[ $template->method_key() ] ) )
+            $this->view->method_names[ $template->method_key() ] = $this->compiled_method_name( $template );
+        return $this->view->method_names[ $template->method_key() ];
     }
 
     private function compiled_method_name( &$template )
@@ -77,7 +78,7 @@ abstract class compilable_template_handler extends \biru_view\template_handler
     {
         //$body = $this->compile( $template->source() );
         $body = $template->source();
-        if( !self::$template_args[ $render_symbol ] )
+        if( !isset( self::$template_args[ $render_symbol ] ) )
             self::$template_args[ $render_symbol ] = array();
         $locals_keys = self::$template_args[ $render_symbol ] != array() ? array_keys( self::$template_args[ $render_symbol ] ) : array_keys( $template->locals );
 
@@ -108,4 +109,3 @@ abstract class compilable_template_handler extends \biru_view\template_handler
         return $compile_time < $lstat;
     }
 }
-?>
