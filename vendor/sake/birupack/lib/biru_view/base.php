@@ -103,7 +103,10 @@ class base
             return $this->render_partial_collection( null, $collection, null, $local_assigns );
         }
         else
-            return $this->render_partial( (string) $partial_path, $partial_path, $local_assigns );
+        {
+        	$cls = get_class( $this->controller );
+            return $this->render_partial( "{$cls::$controller_path}/{$this->controller->action_name}", $partial_path, $local_assigns );
+        }
     }
 
     public function render_template( &$template )
