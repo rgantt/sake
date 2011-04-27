@@ -48,7 +48,8 @@ class template
 
     public function source()
     {
-        $src = "include \"{$this->filename}\";\n";
+    	$f = addslashes($this->filename);
+        $src = "include \"{$f}\";\n";
         $this->source = $this->source ? $this->source : $src;
         return $this->source;
     }
@@ -94,7 +95,7 @@ class template
             {
                 $this->extension = $this->finder->pick_template_extension( $this->path );
                 if( !$this->extension )
-                    throw new \sake_exception("no template found for {$this->path} in {$this->finder->view_paths->inspect}");
+                    throw new \sake_exception("no template found for {$this->path} in {$this->finder->_view_paths}");
                 $this->filename = $this->finder->pick_template( $this->path, $this->extension );
                 $this->extension = preg_replace( '/^.+\./', '', $this->extension );
             }
