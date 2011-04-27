@@ -25,9 +25,10 @@ class partial_template extends template
     {
         $this->locals[ $this->counter_name ] += 1;
         $this->locals['object'] = $this->locals[ $this->variable_name ] = $object;
-
-        // returning render do { @locals.delete( @variable_name ); @locals.delete( :object ) }
-        return $this->render();
+        $render = $this->render();
+        unset( $this->locals[ $this->variable_name ] );
+        unset( $this->locals['object'] );
+        return $render;
     }
 
     public function counter( $num )
@@ -77,5 +78,4 @@ class partial_template extends template
         $this->counter_name = ( isset( $this->counter_name ) ? $this->counter_name : $this->{$tmp} );
         $this->locals[ $this->counter_name ] = 0;
     }
-}    
-?>
+}
