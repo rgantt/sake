@@ -183,7 +183,7 @@ class template_finder
     public function find_template_extension_from_first_render()
     {
         // File.basename(@template.first_render.to_s)[/^[^.]+\.(.+)$/, 1]
-        return basename( $this->template->first_render );
+        return basename( (string) $this->template->first_render );
     }
 
     private function check_view_paths( $view_paths )
