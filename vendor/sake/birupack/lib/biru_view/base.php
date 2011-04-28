@@ -30,6 +30,7 @@ class base
 
     static function load_helpers()
     {
+    	echo "trying to load helpers!\n";
         $d = dir(dirname(__FILE__)."/helpers");
         while( false !== ( $file = $d->read() ) )
         {
@@ -122,23 +123,23 @@ class base
 
     public function template_format()
     {
-        if( $this->template_format )
+        if( !is_null( $this->template_format ) )
             return $this->template_format;
 
-        if( $this->controller && $this->controller->request )
+        if( isset( $this->controller ) && isset( $this->controller->request ) )
         {
-            $parameter_format = $controller->request->parameters['format'];
-            $accept_format = $controller->request->accepts->first;
+            $parameter_format = isset( $this->controller->request->parameters['format'] ) ? $this->controller->request->parameters['format'] : '';
+            $accept_format = $this->controller->request->accepts[0];
 
-            if( $parameter_format->blank() && $accept_format != 'js' )
+            if( empty( $parameter_format ) && $accept_format != 'js' )
                 $this->template_format = 'html';
-            else if( $parameter_format->blank() && $accept_format == 'js' )
+            else if( empty( $parameter_format ) && $accept_format == 'js' )
                 $this->template_format = 'js';
             else
                 $this->template_format = $parameter_format;
         }
         else
-            $this->template->format = 'html';
+            $this->template_format = 'html';
     }
 
     private function wrap_content_for_layout( $content )
