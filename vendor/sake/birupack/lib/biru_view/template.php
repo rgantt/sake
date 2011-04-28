@@ -35,8 +35,7 @@ class template
         }
         $this->method = $view->controller->action_name;
         $this->locals = is_array( $locals ) ? $locals : array();
-        //$name = self::$class->handler_class_for_extension( $this->extension );
-        $name = '\biru_view\template_handlers\phtml'; // only one handler for now
+        $name = self::handler_class_for_extension( $this->extension );
         $this->handler = new $name( $this->view );
     }
 
@@ -56,7 +55,6 @@ class template
 
     public function method_key()
     {
-        //$this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->filename : $this->source() );
         $this->method_key = $this->method_key ? $this->method_key : ( $this->filename ? $this->remove_special( $this->filename ) : $this->method );
         return $this->method_key;
     }
@@ -90,7 +88,9 @@ class template
         if( $use_full_path )
         {
             if( $this->extension )
+            {
                 $this->filename = $this->finder->pick_template( $this->path_without_extension, $this->extension );
+            }
             else
             {
                 $this->extension = $this->finder->pick_template_extension( $this->path );
@@ -103,14 +103,14 @@ class template
         else
             $this->filename = $this->path;
             
-        if( !$this->filename )
-            throw new \biru_controller\sake_exception("couldn't find template file for {$this->path} in {$this->finder->_view_paths}");
+        if( empty( $this->filename ) )
+            throw new \biru_controller\sake_exception("couldn't find template file for {$this->path}");
     }
 
     static function register_template_handler( $extension, $klass )
     {
         self::$template_handlers[ $extension ] = $klass;
-        template_finder::update_extension_cache_for( $extension );
+        \biru_view\template_finder::update_extension_cache_for( $extension );
     }
 
     static function template_handler_extensions()
@@ -128,7 +128,7 @@ class template
 
     static function handler_class_for_extension( $extension )
     {
-        return ( $extension && self::$template_handlers[ $extension ] ) ? self::$template_handlers[ $extension ] : self::$default_template_handlers;
+        return ( $extension && isset( self::$template_handlers[ $extension ] ) ) ? self::$template_handlers[ $extension ] : self::$default_template_handlers;
     }
 
     private function render_partial_collection_with_known_partial_path( $collection, $partial_path, $local_assigns )
@@ -147,4 +147,7 @@ class template
 }
 
 template::register_default_template_handler( 'phtml', '\biru_view\template_handlers\phtml' );
+template::register_template_handler( 'js', '\biru_view\template_handlers\js' );
+template::register_template_handler( 'html', '\biru_view\template_handlers\phtml' );
+template::register_template_handler( 'xml', '\biru_view\template_handlers\phtml' );
 ?>
