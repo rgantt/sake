@@ -25,8 +25,8 @@ abstract class abstract_request
     public $host_with_port;
     public $port;
     public $content_length;
-
-    protected $parameters;
+    public $parameters;
+    
     protected $path_parameters;
     
     abstract public function body();
@@ -242,8 +242,6 @@ abstract class abstract_request
     		$matches = array();
     		preg_match( '|([^/]+)$|', $this->env['SCRIPT_NAME'], $matches );
     		$script_filename = !empty( $matches[0] ) ? $matches[0] : null;
-         	# Construct IIS missing REQUEST_URI from SCRIPT_NAME and PATH_INFO.
-        	//script_filename = @env['SCRIPT_NAME'].to_s.match(%r{[^/]+$})
         	$uri = $this->env['PATH_INFO'];
     	   	if( !is_null( $script_filename ) )
        			$uri = preg_replace( "/{$script_filename}\//", "", $uri );
