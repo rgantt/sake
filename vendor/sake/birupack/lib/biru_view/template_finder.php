@@ -7,7 +7,7 @@ class template_finder
     public $template;
     
     static $processed_view_paths = array();
-    static $file_extension_cache = array( array() );
+    static $file_extension_cache = array();
     
     static $view_paths = array();
 
@@ -29,14 +29,14 @@ class template_finder
                     $rel_path = explode( $dir, $file );
                     $rel_path = end( $rel_path );
                     $rel_path = preg_replace( '/^\//', '', $rel_path );
-                    self::$processed_view_paths[ $dir ][] = $rel_path; // remove preceding slash from last element
+                    self::$processed_view_paths[ $dir ][] = $rel_path;
                     $extensions = explode( '.', $file );
                     $extension = end( $extensions );
                     if( in_array( $extension, self::template_handler_extensions() ) )
                     {
                         $k = explode( $dir, $file );
                         $key = preg_replace( '/^\//', '', preg_replace( '/\.(\w+)$/', '', end( $k ) ) );
-                        self::$file_extension_cache[ $dir ][ $key ] = $extension;
+                        self::$file_extension_cache[ $dir ][ $key ][] = $extension;
                     }
                 }
             }
@@ -45,14 +45,19 @@ class template_finder
     
     static function update_extension_cache_for( $extension )
     {
-        foreach( self::$processed_view_paths as $dir )
+    	foreach( self::$processed_view_paths as $dir )
         {
-            $dirs = glob("{$dir}/**/*.{$extension}");
-            foreach( $dirs as $file )
+        	$f1 = glob("{$dir}/*");
+            $f2 = glob("{$dir}/*/*.*");
+            $f3 = glob("{$dir}/*.*");
+            $files = array_unique( array_merge( $f1, $f2, $f3 ) );
+            foreach( $files as $file )
             {
-                // key = file.split(dir).last.sub(/^\//, '').sub(/\.(\w+)$/, '')
-                $key = $file;
-                self::$file_extension_cache[ $dir ][ $key ] = $extension;
+            	if( is_dir( $file ) )
+            		continue;
+                $k = explode( $dir, $file );
+                $key = preg_replace( '/^\//', '', preg_replace( '/\.(\w+)$/', '', end( $k ) ) );
+                self::$file_extension_cache[ $dir ][ $key ][] = $extension;
             }
         }
     }
@@ -141,11 +146,13 @@ class template_finder
 
     public function pick_template_extension( $template_path )
     {
-        $extension1 = $this->find_template_extension_from_handler( $template_path, $this->template->template_format );
+        $extension1 = $this->find_template_extension_from_handler( $template_path, $this->template->template_format() );
         $extension2 = $this->find_template_extension_from_handler( $template_path, 'html' );
         if( $extension1 or $this->find_template_extension_from_first_render() )
+        {
             return $extension1;
-        else if( $this->template->template_format == 'js' && $extension2 )
+        }
+        else if( $this->template->template_format() == 'js' && $extension2 )
         {
             $this->template->template_format = 'html';
             return $extension2;
@@ -155,20 +162,23 @@ class template_finder
 
     public function find_template_extension_from_handler( $template_path, $template_format = null )
     {
-        $template_format = ( $template_format == null ) ? $this->template->template_format : $template_format;
+        $template_format = ( $template_format === null ) ? $this->template->template_format() : $template_format;
         $formatted_template_path = "{$template_path}.{$template_format}";
-
-        foreach( self::$view_paths as $path )
+        foreach( $this->_view_paths as $path )
         {
-            $extensions1 = self::$file_extension_cache[ $path ][ $formatted_template_path ];
-            $extensions2 = self::$file_extension_cache[ $path ][ $template_path ];
-            if( $extensions1 )
+            $extensions1 = isset( self::$file_extension_cache[ $path ][ $formatted_template_path ] ) ?self::$file_extension_cache[ $path ][ $formatted_template_path ] : null;
+            $extensions2 = isset( self::$file_extension_cache[ $path ][ $template_path ] ) ? self::$file_extension_cache[ $path ][ $template_path ] : null;
+            if( !empty( $extensions1 ) )
+            {
                 return "{$template_format}.{$extensions1[0]}";
-            elseif( $extensions2 )
-                return (string)$extensions2[0];
+            }
+            elseif( !empty( $extensions2 ) )
+            {
+                return "{$extensions2[0]}";
+            }
         }
         //return null;
-        return 'phtml';
+        return "phtml";
     }
 
     public function path_and_extension( $template_path )
@@ -182,8 +192,9 @@ class template_finder
 
     public function find_template_extension_from_first_render()
     {
-        // File.basename(@template.first_render.to_s)[/^[^.]+\.(.+)$/, 1]
-        return basename( (string) $this->template->first_render );
+    	$matches = array();
+    	preg_match( '/^[^.]+\.(.+)$/', (string)$this->template->first_render, $matches );
+        return isset( $matches[1] ) ? $matches[1] : null;
     }
 
     private function check_view_paths( $view_paths )
