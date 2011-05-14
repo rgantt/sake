@@ -169,13 +169,9 @@ class template_finder
             $extensions1 = isset( self::$file_extension_cache[ $path ][ $formatted_template_path ] ) ?self::$file_extension_cache[ $path ][ $formatted_template_path ] : null;
             $extensions2 = isset( self::$file_extension_cache[ $path ][ $template_path ] ) ? self::$file_extension_cache[ $path ][ $template_path ] : null;
             if( !empty( $extensions1 ) )
-            {
                 return "{$template_format}.{$extensions1[0]}";
-            }
             elseif( !empty( $extensions2 ) )
-            {
                 return "{$extensions2[0]}";
-            }
         }
         //return null;
         return "phtml";
