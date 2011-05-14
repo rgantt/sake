@@ -94,18 +94,6 @@ abstract class base implements controller
     
     final public function __construct()
     {
-        if (get_magic_quotes_gpc()) 
-        {
-            function stripslashes_deep( $value )
-            {
-                $value = is_array($value) ? array_map('biru_controller\stripslashes_deep', $value) : stripslashes($value);
-                return $value;
-            }
-            $_POST = array_map('biru_controller\stripslashes_deep', $_POST);
-            $_GET = array_map('biru_controller\stripslashes_deep', $_GET);
-            $_COOKIE = array_map('biru_controller\stripslashes_deep', $_COOKIE);
-            $_REQUEST = array_map('biru_controller\stripslashes_deep', $_REQUEST);
-        }
         $this->layout('default'); 
         $ref = new \ReflectionObject( $this );
         $this->name = $ref->name;
@@ -267,9 +255,12 @@ abstract class base implements controller
         $this->image_basedir = $dir;
     }
 
+    /**
+     * @deprecated use layout( String ) directly instead
+     */
     public function set_default_layout( $layout )
     {
-        $this->layout = $layout;
+        $this->layout( $layout );
     }
 
     public function get_default_layout()
@@ -612,9 +603,9 @@ abstract class base implements controller
         $layout = $this->layout;
         if( $this->auto_layout )
         {
-            if( !$this->default_layout )
+            if( !isset( $this->default_layout ) )
                 $this->default_layout = array();
-            if( !$this->default_layout[ $format ] )
+            if( !isset( $this->default_layout[ $format ] ) )
                 $this->default_layout[ $format ] = $this->default_layout_with_format( $format, $layout );
             return $this->default_layout[ $format ];
         }
@@ -624,11 +615,20 @@ abstract class base implements controller
     
     public function active_layout( $passed_layout = null )
     {
-        $active_layout = !is_null( $passed_layout ) ? $passed_layout : $this->default_layout( $this->response->template->template_format );
-        if( preg_match( '/\//', $active_layout ) ) #&& !$this->layout_directory( $active_layout ) )
-            return $active_layout;
-        else
-            return "layouts/{$active_layout}";
+        $active_layout = !is_null( $passed_layout ) ? $passed_layout : $this->default_layout( $this->response->template->template_format() );
+        if( $active_layout )
+        {
+        	if( preg_match( '/\//', $active_layout ) && !$this->layout_directory( $active_layout ) )
+           		return $active_layout;
+        	else
+            	return "layouts/{$active_layout}";
+        }
+        return null;
+    }
+    
+    public function layout_directory( $layout_name )
+    {
+    	return $this->template->finder->find_template_extension_from_handler("layouts/{$layout_name}");
     }
     
     public function layout( $template_name, $conditions = array(), $auto = false )
@@ -671,7 +671,7 @@ abstract class base implements controller
         $template_with_options = is_array( $options );
 
         $layout = $this->pick_layout( $template_with_options, $options );
-        if( $this->apply_layout( $template_with_options, $options ) && $layout )
+        if( $layout && $this->apply_layout( $template_with_options, $options ) )
         {
             $this->assert_existence_of_template_file( $layout );
             if( $template_with_options )
@@ -720,9 +720,7 @@ abstract class base implements controller
             $action_name = $this->action_name;
         if( strpos( $action_name, '/' ) && $this->template_path_includes_controller( $action_name ) )
             $action_name = $this->strip_out_controller( $action_name );
-       	$tr = self::$controller_path."/{$action_name}";
-        //$tr = $action_name;
-        return $tr;
+       	return self::$controller_path."/{$action_name}";
     }
     
     private function do_filter( $action, $filters )
@@ -751,7 +749,7 @@ abstract class base implements controller
     {
         $extension = $this->template->finder->pick_template_extension( $template_name );
         $name_with_extension = $extension ? "{$template_name}.{$extension}" : $template_name;
-        if( isset( self::$exempt_from_layout ) && in_array( $name_with_extension, self::$exempt_from_layout ) )
+        if( isset( self::$exempt_from_layout ) && in_array( $extension, self::$exempt_from_layout ) )
             return true;
         return false;
     }
@@ -760,7 +758,8 @@ abstract class base implements controller
     {
         if( $options == 'update' )
             return false;
-        return ( $template_with_options ? $this->candidate_for_layout( $options ) : !$this->template_exempt_from_layout() );
+        $v = ( $template_with_options ? $this->candidate_for_layout( $options ) : !$this->template_exempt_from_layout() );
+        return $v;
     }
 
     private function candidate_for_layout( $options )
@@ -768,8 +767,8 @@ abstract class base implements controller
         $val1 = ( isset( $options['layout'] ) && $options['layout'] !== false );
         $action = isset( $options['action'] ) ? $options['action'] : null;
         $tmp = isset( $options['template'] ) ? $options['template'] : $this->default_template_name( $action );
-        $val2 = ( !isset( $options['text'], $options['xml'], $options['json'], $options['file'], $options['inline'], $options['partial'], $options['nothing'] ) && $this->template_exempt_from_layout( $tmp ) );
-        return( $val1 || $val2 );
+        $val2 = ( !isset( $options['text'], $options['xml'], $options['json'], $options['file'], $options['inline'], $options['partial'], $options['nothing'] ) && !$this->template_exempt_from_layout( $tmp ) );
+        return ( $val1 || $val2 );
     }
 
     private function pick_layout( $template_with_options, $options )
@@ -792,6 +791,7 @@ abstract class base implements controller
             if( $this->action_has_layout() )
                 return $this->active_layout();
         }
+        return false;
     }
 
     private function default_layout_with_format( $format, $layout )
