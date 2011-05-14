@@ -19,6 +19,21 @@ class test_controller extends \biru_controller\concrete_base
 		return $this->render( array( 'template' => 'test/hello_world' ) );
 	}
 	
+	public function render_hello_world_with_forward_slash()
+	{
+		return $this->render( array( 'template' => '/test/hello_world' ) );
+	}
+	
+	public function render_template_in_top_directory()
+	{
+		return $this->render( array( 'template' => 'shared' ) );
+	}
+	
+	public function render_template_in_top_directory_with_slash()
+	{
+		return $this->render( array( 'template' => '/shared' ) );
+	}
+	
 	public function render_hello_world_from_variable()
 	{
 		$this->person = "ryan";
@@ -64,6 +79,11 @@ class test_controller extends \biru_controller\concrete_base
 	{
 		$this->name = "Ryan";
 		return $this->render( array( 'template' => "test/hello" ) );
+	}
+	
+	public function render_xml_with_custom_content_type()
+	{
+		return $this->render( array( 'xml' => "<blah/>", 'content_type' => "application/atomsvc+xml" ) );
 	}
 	
 	public function builder_layout_test()
@@ -119,7 +139,6 @@ class test_controller extends \biru_controller\concrete_base
 	
 	public function render_to_string_test()
 	{
-		echo "rendering to string\n";
 		$this->foo = $this->render_to_string( array( 'inline' => "this is a test" ) );
 	}
 	
@@ -130,7 +149,7 @@ class test_controller extends \biru_controller\concrete_base
 	
 	public function partial_dot_html()
 	{
-		return $this->render( array( 'partial' => 'partial.phtml' ) );
+		return $this->render( array( 'partial' => 'partial.html.phtml' ) );
 	}
 	
 	public function default_render()
@@ -153,16 +172,19 @@ class test_controller extends \biru_controller\concrete_base
 		};
 	}
 	
+	/**
+	 * only layout_test should be wrapped in a layout
+	 */
 	private function determine_layout()
 	{
 		switch( $this->action_name )
 		{
 			case 'layout_test':
-				return 'layouts/standard';
+				return 'standard';
 		}
 	}
 }
-test_controller::$view_paths = array( dirname(__FILE__)."/../fixtures/" );
+test_controller::view_paths( array( dirname(__FILE__)."/../fixtures" ) );
 
 class render_test extends SAKE_test_case
 {
@@ -171,7 +193,6 @@ class render_test extends SAKE_test_case
 		$this->request = new test_request;
 		$this->response = new test_response;
 		$this->controller = new test_controller;
-		
 		$this->request->host = "www.google.com";
 	}
 	
@@ -261,13 +282,13 @@ class render_test extends SAKE_test_case
 	public function test_render_xml()
 	{
 		$this->get('render_xml_hello');
-		$this->assertEquals( "<html>\n  <p>Hello Ryan</p>\n<p>This is grand!</p>\n</html>\n", $this->response->body );
+		$this->assertEquals( "<html><p>Hello Ryan</p><p>This is grand!</p></html>", $this->response->body );
 	}
 	
 	public function test_render_xml_with_default()
 	{
 		$this->get('greeting');
-		$this->assertEquals( "<p>This is grand!</p>\n", $this->response->body );
+		$this->assertEquals( "<p>This is grand!</p>", $this->response->body );
 	}
 	
 	public function test_layout_rendering()
@@ -285,13 +306,13 @@ class render_test extends SAKE_test_case
 	public function test_render_to_string()
 	{
 		$this->get('hello_in_a_string');
-		$this->assertEquals( "How's there? goodbyeHello: davidHello: marygoodbye\n", $this->response->body );
+		$this->assertEquals( "How's there? Hello: davidHello: marygoodbye", $this->response->body );
 	}
 	
 	public function test_render_to_string_resets_assigns()
 	{
 		$this->get('render_to_string_test');
-		$this->assertEquals( "The value of foo is: ::this is a test::\n", $this->response->body );
+		$this->assertEquals( "The value of foo is: ::this is a test::", $this->response->body );
 	}
 	
 	/*
@@ -374,11 +395,37 @@ class render_test extends SAKE_test_case
 	
 	public function test_should_render_js_partial()
 	{
-		$this->xhr('get', 'partial', array( 'format' => 'js' ) );
+		$this->xhr( 'get', 'partial', array( 'format' => 'js' ) );
 		$this->assertEquals( 'partial js', $this->response->body );
 	}
 	
-	protected function etag_for( $text )
+	public function test_render_with_forward_slash()
+	{
+		$this->get('render_hello_world_with_forward_slash');
+		$this->assert_template( "test/hello_world" );
+	}
+	
+	public function test_render_in_top_directory()
+	{
+		$this->get('render_template_in_top_directory');
+		$this->assert_template('shared');
+		$this->assertEquals( "Elastica", $this->response->body );
+	}
+	
+	public function test_render_in_top_directory_with_slash()
+	{
+		$this->get('render_template_in_top_directory_with_slash');
+		$this->assert_template('shared');
+		$this->assertEquals( "Elastica", $this->response->body );
+	}
+	
+	public function test_should_render_xml_but_keep_custom_content_type()
+	{
+		$this->get('render_xml_with_custom_content_type');
+		$this->assertEquals( "application/atomsvc+xml", $this->response->content_type() );
+	}
+	
+	private function etag_for( $text )
 	{
 		return md5( $text );
 	}
