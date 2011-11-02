@@ -685,7 +685,7 @@ abstract class base implements controller
             $this->template->content_for_layout = $content_for_layout;
 
             $this->response->layout = $this->layout;
-            $status = $template_with_options ? $options['status'] : null;
+            $status = ( $template_with_options && isset( $options['status'] ) ) ? $options['status'] : null;
             return $this->render_for_text( $this->template->render_file( $layout, true ), $status );
         }
         else
