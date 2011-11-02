@@ -41,7 +41,7 @@ class cgi_request extends abstract_request
         return $this->env['RAW_POST_DATA'];
     }
 
-    public function query_parameters()
+    public function &query_parameters()
     {
         if( !$this->query_parameters )
             $this->query_parameters = self::parse_query_parameters( $this->query_string() );

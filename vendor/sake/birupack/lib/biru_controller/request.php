@@ -30,7 +30,7 @@ abstract class abstract_request
     protected $path_parameters;
     
     abstract public function body();
-    abstract public function query_parameters();
+    abstract public function &query_parameters();
     abstract public function request_parameters();
     abstract public function &cookies();
     abstract public function &session();

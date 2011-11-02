@@ -5,7 +5,7 @@ require_once dirname(__FILE__).'/../sake_unit.php';
 require_once dirname(__FILE__).'/../../lib/biru_controller/flash.php';
 require_once dirname(__FILE__).'/../../lib/biru_view/partial_template.php';
 
-class test_controller extends \biru_controller\concrete_base
+class render_test_controller extends \biru_controller\concrete_base
 {
 	public function initialize()
 	{
@@ -184,7 +184,7 @@ class test_controller extends \biru_controller\concrete_base
 		}
 	}
 }
-test_controller::view_paths( array( dirname(__FILE__)."/../fixtures" ) );
+render_test_controller::view_paths( array( dirname(__FILE__)."/../fixtures" ) );
 
 class render_test extends SAKE_test_case
 {
@@ -192,7 +192,7 @@ class render_test extends SAKE_test_case
 	{
 		$this->request = new test_request;
 		$this->response = new test_response;
-		$this->controller = new test_controller;
+		$this->controller = new render_test_controller;
 		$this->request->host = "www.google.com";
 	}
 	
