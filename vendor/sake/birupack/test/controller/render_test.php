@@ -16,12 +16,12 @@ class render_test_controller extends \biru_controller\concrete_base
 	
 	public function render_hello_world()
 	{
-		return $this->render( array( 'template' => 'test/hello_world' ) );
+		return $this->render( array( 'template' => 'render_test/hello_world' ) );
 	}
 	
 	public function render_hello_world_with_forward_slash()
 	{
-		return $this->render( array( 'template' => '/test/hello_world' ) );
+		return $this->render( array( 'template' => '/render_test/hello_world' ) );
 	}
 	
 	public function render_template_in_top_directory()
@@ -78,7 +78,7 @@ class render_test_controller extends \biru_controller\concrete_base
 	public function render_xml_hello()
 	{
 		$this->name = "Ryan";
-		return $this->render( array( 'template' => "test/hello" ) );
+		return $this->render( array( 'template' => "render_test/hello" ) );
 	}
 	
 	public function render_xml_with_custom_content_type()
@@ -118,7 +118,7 @@ class render_test_controller extends \biru_controller\concrete_base
 	public function hello_in_a_string()
 	{
 		$this->customers = array( (object) array( 'name' => 'david' ), (object) array( 'name' => 'mary' ) );
-		return $this->render( array( 'text' => "How's there? ".$this->render_to_string( array( 'template' => 'test/list' ) ) ) );
+		return $this->render( array( 'text' => "How's there? ".$this->render_to_string( array( 'template' => 'render_test/list' ) ) ) );
 	}
 	
 	/** NEED A FIXTURE FOR THIS, OR TO CHANGE COMPILATION LOGIC
@@ -200,13 +200,13 @@ class render_test extends SAKE_test_case
 	{
 		$this->get('hello_world');
 		$this->assert_response('200');
-		$this->assert_template( "test/hello_world" );
+		$this->assert_template( "render_test/hello_world" );
 	}
 	
 	public function test_do_with_render()
 	{
 		$this->get('render_hello_world');
-		$this->assert_template( "test/hello_world" );
+		$this->assert_template( "render_test/hello_world" );
 	}
 	
 	public function test_do_with_render_from_variable()
@@ -218,7 +218,7 @@ class render_test extends SAKE_test_case
 	public function test_do_with_render_action()
 	{
 		$this->get('render_action_hello_world');
-		$this->assert_template( "test/hello_world" );
+		$this->assert_template( "render_test/hello_world" );
 	}
 	
 	public function test_do_with_render_text()
@@ -402,7 +402,7 @@ class render_test extends SAKE_test_case
 	public function test_render_with_forward_slash()
 	{
 		$this->get('render_hello_world_with_forward_slash');
-		$this->assert_template( "test/hello_world" );
+		$this->assert_template( "render_test/hello_world" );
 	}
 	
 	public function test_render_in_top_directory()

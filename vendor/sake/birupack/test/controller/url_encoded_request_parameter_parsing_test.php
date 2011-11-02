@@ -87,7 +87,7 @@ class url_encoded_request_parameter_parsing_test extends SAKE_test_case
 	public function test_query_string_with_amps()
 	{
 		$this->assertEquals(
-			array( 'action' => 'create_customer', 'name' => "Don't & Does" ),
+			array( 'action' => 'create_customer', 'name' => "Don\'t & Does" ),
 			\biru_controller\abstract_request::parse_query_parameters( $this->query_string_with_amps )
 		);
 	}
