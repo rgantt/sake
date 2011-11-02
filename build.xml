@@ -40,10 +40,6 @@
 			<fileset dir="${basedir}/vendor/sake">
 				<include name="**/*.php" />
 			</fileset>
-
-			<fileset dir="${basedir}/test">
-				<include name="**/*.php" />
-			</fileset>
 		</apply>
 	</target>
 
