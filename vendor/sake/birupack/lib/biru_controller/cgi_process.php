@@ -48,7 +48,7 @@ class cgi_request extends abstract_request
         return $this->query_parameters;
     }
 
-    public function request_parameters()
+    public function &request_parameters()
     {
         if( !$this->request_parameters )
             $this->request_parameters = $this->parse_formatted_request_parameters();
